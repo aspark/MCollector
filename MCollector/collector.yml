@@ -1,0 +1,62 @@
+﻿port: 18086
+api: 
+  status: true
+  refresh: true
+exporter:
+  prometheus:
+    enable: true
+    port: 1234
+targets:
+  - name: curl local
+    target: "http://127.0.0.1"
+    type: url
+    interval: 3000
+  - name: curl baidu
+    target: "http://baidu.com"
+    type: url
+    interval: 10000
+    transform:
+      search:
+        text: "baidu"
+  - name: curl baidu failed
+    target: "http://baidu.com"
+    type: url
+    interval: 10000
+    transform:
+      search:
+        text: "百度"
+  #- name: collect local and transform
+  #  target: "http://127.0.0.1:18086/status"
+  #  type: url
+  #  interval: 3000
+  #  transform:
+  #    json: 
+  #      extractNameFrom: name
+  #      extractContentFrom: msg
+  - name: curl local with header
+    target: "http://127.0.0.1"
+    type: url
+    interval: 3000
+    headers:
+      Host: www.baidu.com
+      Content-Type: application/json
+    contents:
+      - "{test:1}"
+  - name: ping local
+    target: 127.0.0.1
+    type: ping
+    interval: 3000
+  - name: telnet local 80
+    target: 127.0.0.1:80
+    type: telnet
+    interval: 5000
+  - name: ping local
+    target: 127.0.0.1:80
+    type: cmd
+    interval: 5000
+    contents:
+      - openssl s_client --connect www.baidu.com
+      - echo ok
+    transform: 
+     search:
+       text: sucess

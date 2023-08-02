@@ -1,0 +1,1 @@
+sc create MCollector binPath= %CD%\MCollector.exe start=auto

@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{318BC5BC-BE92-4102-8F59-D6B4F9ED348F}"
+	ProjectSection(SolutionItems) = preProject
+		Dockerfile = Dockerfile
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Core", "MCollector.Core\MCollector.Core.csproj", "{319EFE5C-5454-4A7B-8FF7-1EE7B926AA1F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector", "MCollector\MCollector.csproj", "{DFF2B9CA-4CEB-4877-A565-3E7B69A20039}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.Prometheus", "MCollector.Plugins.Prometheus\MCollector.Plugins.Prometheus.csproj", "{193904F4-EA2B-453D-AD6B-F60AA7E4C1AC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.TencentCloud", "MCollector.Plugins.TencentCloud\MCollector.Plugins.TencentCloud.csproj", "{C646B298-3866-42DD-9C05-6FCBF9BEFC50}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{319EFE5C-5454-4A7B-8FF7-1EE7B926AA1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{319EFE5C-5454-4A7B-8FF7-1EE7B926AA1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{319EFE5C-5454-4A7B-8FF7-1EE7B926AA1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{319EFE5C-5454-4A7B-8FF7-1EE7B926AA1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFF2B9CA-4CEB-4877-A565-3E7B69A20039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFF2B9CA-4CEB-4877-A565-3E7B69A20039}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFF2B9CA-4CEB-4877-A565-3E7B69A20039}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFF2B9CA-4CEB-4877-A565-3E7B69A20039}.Release|Any CPU.Build.0 = Release|Any CPU
+		{193904F4-EA2B-453D-AD6B-F60AA7E4C1AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{193904F4-EA2B-453D-AD6B-F60AA7E4C1AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{193904F4-EA2B-453D-AD6B-F60AA7E4C1AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{193904F4-EA2B-453D-AD6B-F60AA7E4C1AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5E9C9C21-F272-4C3A-BB70-AF22094F41E5}
+	EndGlobalSection
+EndGlobal
