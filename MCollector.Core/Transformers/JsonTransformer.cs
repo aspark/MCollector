@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace MCollector.Core.Transformers
 {
@@ -51,18 +52,33 @@ namespace MCollector.Core.Transformers
             //data.Duration = rawData.Duration;
             //data.IsSuccess = rawData.IsSuccess;
             //data.Headers = rawData.Headers;
-            var data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
-
-            if (element.TryGetProperty(args.ExtractNameFrom, out JsonElement elName))
+            CollectedData data;
+            if (args.ExtractAllProperties)
             {
-                data.Name += ">" + elName.GetString();
-                if (element.TryGetProperty(args.ExtractContentFrom, out JsonElement elContent))
+                foreach(var prop in element.EnumerateObject())
                 {
-                    data.Content = elContent.GetString();
-
+                    data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
+                    data.Name += (">" + prop.Name);
+                    data.Content = prop.Value.GetString();
                     items.Add(data);
+                }
 
-                    return true;
+                return true;
+            }
+            else
+            {
+                data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
+                if (element.TryGetProperty(args.ExtractNameFrom, out JsonElement elName))
+                {
+                    data.Name += (">" + elName.GetString());
+                    if (element.TryGetProperty(args.ExtractContentFrom, out JsonElement elContent))
+                    {
+                        data.Content = elContent.GetString();
+
+                        items.Add(data);
+
+                        return true;
+                    }
                 }
             }
 
@@ -75,6 +91,11 @@ namespace MCollector.Core.Transformers
         public string ExtractNameFrom { get; set; } = "name";
 
         public string ExtractContentFrom { get; set; } = "content";
+
+        /// <summary>
+        /// 将对象所有属性处理为kv
+        /// </summary>
+        public bool ExtractAllProperties { get; set; } = false;
     }
 
     //public enum JsonMapType

@@ -60,16 +60,16 @@ targets:# 检测目标集合（target）
     target: "http://..." # url地址
     type: url
     interval: 3000
-    headers:#【可选】自定义http头
+    headers:# 【可选】自定义http头
       Host: www.baidu.com
       Content-Type: application/json
-    contents:#【可选】提交的内容，若有值，会使用post方式，将所有contents放入body中
+    contents:# 【可选】提交的内容，若有值，会使用post方式，将所有contents放入body中
       - "{test:1}"
 ```
 
 ### `type: ping`
 ``` yaml
-  - name: name #名称
+  - name: name # 名称
     target: "ip" # ip
     type: ping
     interval: 3000
@@ -77,7 +77,7 @@ targets:# 检测目标集合（target）
 
 ### `type: telnet`
 ``` yaml
-  - name: name #名称
+  - name: name # 名称
     target: "ip:port" # ip和port
     type: telnet
     interval: 3000
@@ -87,7 +87,7 @@ targets:# 检测目标集合（target）
 ### `type: cmd`
 逐条执行Contents中指定的命令行，任一语句执行失败则中止
 ``` yaml
-  - name: name #名称
+  - name: name # 名称
     target: "" # 【可忽略】
     type: cmd
     interval: 3000
@@ -128,6 +128,7 @@ targets:# 检测目标集合（target）
       json: 
         extractNameFrom: name # 将json对象中哪个属性映射name，默认从name提取
         extractContentFrom: msg # 将json对象中哪个属性映射content，默认从content提取
+        ExtractAllProperties: false # 如果为true, 则将json对象所有属性提职了kv，忽略extract配置。默认false
 ```
 
 
@@ -180,8 +181,8 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
 配置说明如下：
 ``` yaml
   prometheus:
-    enable: true #是否启用
-    port: 1234 #供prometheus拉通数据的本地接口
+    enable: true # 是否启用
+    port: 1234 # 供prometheus拉通数据的本地接口
 ```
 
 ### 自定义导出
