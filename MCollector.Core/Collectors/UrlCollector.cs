@@ -13,12 +13,12 @@ namespace MCollector.Core.Collectors
             _httpClientFactory = httpClientFactory;
         }
 
-        public string Type => "url";
+        public virtual string Type => "url";
 
         private Dictionary<string, int> _conentHeaders = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase) {
             { "Content-Type", 0 }, {"Content-Encoding", 1} , {"Content-Language", 2} , {"Content-Location", 3 } , {"Content-MD5", 4 } , {"Content-Range", 5 }
         };
-        public async Task<CollectedData> Collect(CollectTarget target)
+        public virtual async Task<CollectedData> Collect(CollectTarget target)
         {
             var client = _httpClientFactory.CreateClient("default");
 
@@ -64,7 +64,7 @@ namespace MCollector.Core.Collectors
             try
             {
                 var isCompleted = false;
-                cts.CancelAfter(Math.Min(target.Interval, 6000));//默认6秒超时
+                cts.CancelAfter(Math.Min(target.GetInterval(), 6000));//默认6秒超时
                 //Task.Run(async () =>
                 //{
                 //    await Task.Delay(Math.Min(target.Interval, 6000), cts.Token);

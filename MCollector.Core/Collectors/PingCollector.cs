@@ -16,7 +16,7 @@ namespace MCollector.Core.Collectors
             {
                 using (Ping ping = new Ping())
                 {
-                    var reply = await ping.SendPingAsync(target.Target, Math.Min(target.Interval, 300));//300ms timeout
+                    var reply = await ping.SendPingAsync(target.Target, Math.Min(target.GetInterval(), 300));//300ms timeout
                     if (reply.Status == IPStatus.Success)
                     {
                         data.IsSuccess = true;

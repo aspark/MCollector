@@ -14,14 +14,14 @@ targets:
   - name: curl baidu
     target: "http://baidu.com"
     type: url
-    interval: 10000
+    interval: 10
     transform:
       search:
         text: "baidu"
   - name: curl baidu failed
     target: "http://baidu.com"
     type: url
-    interval: 10000
+    interval: 10s
     transform:
       search:
         text: "百度"
@@ -36,7 +36,7 @@ targets:
   - name: curl local with header
     target: "http://127.0.0.1"
     type: url
-    interval: 3000
+    interval: 3s
     headers:
       Host: www.baidu.com
       Content-Type: application/json
@@ -45,15 +45,15 @@ targets:
   - name: ping local
     target: 127.0.0.1
     type: ping
-    interval: 3000
+    interval: 3s
   - name: telnet local 80
     target: 127.0.0.1:80
     type: telnet
-    interval: 5000
-  - name: ping local
+    interval: 2.5s
+  - name: cmd
     target: 127.0.0.1:80
     type: cmd
-    interval: 5000
+    interval: 5000ms
     contents:
       - openssl s_client --connect www.baidu.com
       - echo ok

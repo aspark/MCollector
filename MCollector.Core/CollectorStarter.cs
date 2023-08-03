@@ -103,7 +103,7 @@ namespace MCollector.Core
                         _dataAccessor.AddOrUpdate(target, items);
 
                         //await Task.Delay(target.Interval);
-                        _collectorSignal.Wait(target.Interval);
+                        _collectorSignal.Wait(target.GetInterval());
                     }
                     catch(Exception ex) 
                     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace MCollector.Core.Contracts
@@ -39,7 +40,82 @@ namespace MCollector.Core.Contracts
         /// <summary>
         /// 间隔时间（毫秒）
         /// </summary>
-        public int Interval { get; set; } = 3000;
+        public string Interval { get; set; } = "3s";
+
+        private Random _rand = new Random(DateTime.Now.Millisecond);
+        private Func<int>? _fnInterval = null;
+        //private int? _interval;
+        public int GetInterval()
+        {
+            if (_fnInterval == null)
+            {
+                lock (this)
+                {
+                    if(_fnInterval ==null)
+                    {
+                        if (Interval.StartsWith("rand", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            Regex ex = new Regex("(?<s>[^,]+),?\\s?(?<e>[^\\s]+)?");
+                            var m = ex.Match(Interval);
+                            if (m.Success)
+                            {
+                                var start = ParseTime(m.Groups["s"].Value);
+                                var end = 0;
+                                if (m.Groups.ContainsKey("e"))
+                                {
+                                    end = ParseTime(m.Groups["e"].Value);
+                                }
+                                else
+                                {
+                                    end = (int)(start * 1.1);
+                                    start = (int)(start * 0.9);
+                                }
+
+                                _fnInterval = new Func<int>(() => _rand.Next(start, end));
+                            }
+                        }
+                        else
+                        {
+                            var interval = ParseTime(Interval);
+
+                            _fnInterval = new Func<int>(() => interval);
+                        }
+
+                        if (_fnInterval == null)
+                            _fnInterval = new Func<int>(() => 3000);
+                    }
+                }
+            }
+
+            return _fnInterval();
+        }
+
+        private int ParseTime(string time, int defaultTime = 3000)
+        {
+            var t = defaultTime;
+            Regex ex = new Regex(@"^(?<n>[0-9\.]+)(?<u>\w{0,2})?$");
+            var m = ex.Match(Interval);
+
+            if (m.Success)
+            {
+                var num = double.Parse(m.Groups["n"].Value);
+
+                switch (m.Groups["u"].Value.ToLower())
+                {
+                    case "ms":
+                        t = (int)(num);
+                        break;
+                    case "s":
+                        t = (int)(num * 1000);
+                        break;
+                    case "m":
+                        t = (int)(num * 60 * 1000);
+                        break;
+                }
+            }
+
+            return t;
+        }
 
         /// <summary>
         /// 发送的头信息

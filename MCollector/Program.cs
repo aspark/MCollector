@@ -8,6 +8,7 @@ using MCollector.Core.Config;
 using MCollector.Core.Contracts;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Options;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 
@@ -30,9 +31,19 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(cfg =>
     var dirPlugins = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
     if (Directory.Exists(dirPlugins))
     {
+        //var loaded = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => Path.GetFileName(a.Location)));
         foreach (var file in Directory.GetFiles(dirPlugins, "*.dll", SearchOption.AllDirectories))
         {
-            assemblies.Add(Assembly.LoadFrom(file));
+            var name = AssemblyName.GetAssemblyName(file);
+            var fileName = Path.GetFileName(file);
+            //if (!loaded.Contains(fileName))
+            {
+                var asm = Assembly.LoadFrom(file);
+                if (fileName.StartsWith("MCollector", StringComparison.InvariantCultureIgnoreCase)) //只resolve MCollector的类
+                    assemblies.Add(asm);
+
+                //loaded.Add(fileName);
+            }
         }
     }
 

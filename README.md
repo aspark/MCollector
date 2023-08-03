@@ -17,36 +17,47 @@
 ## 配置
 配置文件为`collector.yml`，示例如下：
 
-```
-port: 18086 #应用提供服务的端口
+```yaml
+port: 18086 # 应用提供服务的端口
 api: 
-  status: true #是否启用status接口
-  refresh: true #是否启用刷新接口，若启用，则可以通用GET /refresh接口，立即重新检测所有目标
-exporter: #检测结果导出，，如：prometheus、邮件通知等等
-  prometheus: #prometheus的自定义配置
+  status: true # 是否启用status接口
+  refresh: true # 是否启用刷新接口，若启用，则可以通用GET /refresh接口，立即重新检测所有目标
+exporter: # 检测结果导出，，如：prometheus、邮件通知等等
+  prometheus: # prometheus的自定义配置
     enable: true
     port: 1234
   email:
     host: 0:21
-targets:# 检测目标集合（target）
-  - name: curl local #名称
-    target: "http://127.0.0.1" #目标
+targets: # 检测目标集合（target）
+  - name: curl local # 名称
+    target: "http://127.0.0.1" # 目标
     type: url # 采集方式
-    interval: 3000 # 检测间隔时间，单位：ms，默认3000ms
+    interval: 3 # 检测间隔时间，单位：s，默认3s，也可使用ms,m,rand(min,max)等单位
     headers: # 【可选】头信息，键值对
       Host: xxx.com
       Content-Type: application/json
       [...]
-    contents:# 【可选】提交的内容，数组，如req body或commands，
+    contents: # 【可选】提交的内容，数组，如req body或commands
       - "{test:1}"
       - "{test:2}"
     transform: # 【可选】使用多个转换器对采集数据转换，如对返回的内容做文本查找等
       search: # 转换器名称，可自定义，需实现ITransformer接口
         text: "success" # 转换器自定义配置
-      other: #其它转换器串联
+      other: # 其它转换器串联
         params: xxx
       [...]
 ```
+
+### target配置说明
+| 字段 | 类型 | 说明 |
+|-|-|-|
+| name | string | 名称 |
+| target | string | 目标地址 |
+| type | string | 使用的Collector名称 |
+| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟) 、rand（最小秒，最大秒）|
+| headers | dictionary | 请求头 |
+| contents | string[] | 请求消息体 |
+| transform | dictionary | 结果转换 |
 
 ## 采集方式
 ### `type: url`
@@ -56,14 +67,14 @@ targets:# 检测目标集合（target）
 1. 若返回http code大于400，侧判断为失败
 
 ``` yaml
-  - name: name #名称
+  - name: name # 名称
     target: "http://..." # url地址
     type: url
-    interval: 3000
-    headers:# 【可选】自定义http头
+    interval: 3
+    headers: # 【可选】自定义http头
       Host: www.baidu.com
       Content-Type: application/json
-    contents:# 【可选】提交的内容，若有值，会使用post方式，将所有contents放入body中
+    contents: # 【可选】提交的内容，若有值，会使用post方式，将所有contents放入body中
       - "{test:1}"
 ```
 
@@ -72,7 +83,7 @@ targets:# 检测目标集合（target）
   - name: name # 名称
     target: "ip" # ip
     type: ping
-    interval: 3000
+    interval: 3
 ```
 
 ### `type: telnet`
@@ -80,7 +91,7 @@ targets:# 检测目标集合（target）
   - name: name # 名称
     target: "ip:port" # ip和port
     type: telnet
-    interval: 3000
+    interval: 3
 ```
 > 暂未实现将Contents内容发送到服务端
 
@@ -90,7 +101,7 @@ targets:# 检测目标集合（target）
   - name: name # 名称
     target: "" # 【可忽略】
     type: cmd
-    interval: 3000
+    interval: 3
     contents:
       - openssl s_client --connect www.baidu.com
       - echo ok
@@ -116,10 +127,14 @@ targets:# 检测目标集合（target）
   - name: tencent cloud demo
     target: "http://xxx/tke/api"
     type: tc
-    interval: 30000
+    interval: 30
 ```
 
-## 转换
+## 预处理(prepare)
+### OAuth
+> todo
+
+## 转换(transformer)
 可以使用多个tranformer串联执行，当CollectedData的IsSuccess为false或标记为Final时，中止执行后续transformer
 ### `json`
 将采集的内容以json格式解析，如果返回内容是数组类型，则会将转换应用到数组中的每个对象上，这种情况下会生成多条采集结果
@@ -128,7 +143,7 @@ targets:# 检测目标集合（target）
       json: 
         extractNameFrom: name # 将json对象中哪个属性映射name，默认从name提取
         extractContentFrom: msg # 将json对象中哪个属性映射content，默认从content提取
-        ExtractAllProperties: false # 如果为true, 则将json对象所有属性提职了kv，忽略extract配置。默认false
+        ExtractAllProperties: false # 如果为true, 则将json对象所有属性提取为kv，忽略extract配置。默认false
 ```
 
 
@@ -170,7 +185,7 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
        other2: xxxx
 ```
 
-## 导出
+## 导出(exporter)
 所有导出方式是在ICollector和ITransformer执行完成后才触发
 ### prometheus
 将采集到的数据上报到prometheus，上报的key为target的name，value的处理方式如下：

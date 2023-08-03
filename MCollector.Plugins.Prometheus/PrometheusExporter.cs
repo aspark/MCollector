@@ -54,7 +54,7 @@ namespace MCollector.Plugins.Prometheus
             var gauge = _dicMetrixs.GetOrAdd(data.Name, k => Metrics.CreateGauge(Regex.Replace(data.Name, "[^a-zA-Z0-9_]", "_"), data.Name));//名称可能非法
 
             //如果内容是数据，侧用数据上报
-            if (data.Content != null)
+            if (data.IsSuccess && data.Content != null)
             {
                 if(double.TryParse(data.Content, out double d))
                 {
