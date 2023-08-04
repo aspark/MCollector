@@ -55,13 +55,13 @@ namespace MCollector.Core.Contracts
                     {
                         if (Interval.StartsWith("rand", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            Regex ex = new Regex("(?<s>[^,]+),?\\s?(?<e>[^\\s]+)?");
+                            Regex ex = new Regex(@"\((?<s>[^,]+),?\s*(?<e>[^\s]+)?\)");
                             var m = ex.Match(Interval);
                             if (m.Success)
                             {
                                 var start = ParseTime(m.Groups["s"].Value);
                                 var end = 0;
-                                if (m.Groups.ContainsKey("e"))
+                                if (m.Groups.ContainsKey("e") && !string.IsNullOrWhiteSpace(m.Groups["e"].Value))
                                 {
                                     end = ParseTime(m.Groups["e"].Value);
                                 }
@@ -94,7 +94,7 @@ namespace MCollector.Core.Contracts
         {
             var t = defaultTime;
             Regex ex = new Regex(@"^(?<n>[0-9\.]+)(?<u>\w{0,2})?$");
-            var m = ex.Match(Interval);
+            var m = ex.Match(time);
 
             if (m.Success)
             {
@@ -105,11 +105,12 @@ namespace MCollector.Core.Contracts
                     case "ms":
                         t = (int)(num);
                         break;
-                    case "s":
-                        t = (int)(num * 1000);
-                        break;
                     case "m":
                         t = (int)(num * 60 * 1000);
+                        break;
+                    default:
+                    case "s":
+                        t = (int)(num * 1000);
                         break;
                 }
             }

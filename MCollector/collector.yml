@@ -10,7 +10,7 @@ targets:
   - name: curl local
     target: "http://127.0.0.1"
     type: url
-    interval: 3000
+    interval: 3
   - name: curl baidu
     target: "http://baidu.com"
     type: url
@@ -21,14 +21,14 @@ targets:
   - name: curl baidu failed
     target: "http://baidu.com"
     type: url
-    interval: 10s
+    interval: rand(10s,20s)
     transform:
       search:
         text: "百度"
   - name: dotnet health check
     target: "http://localhost:44359/healthz"
     type: url
-    interval: 3000
+    interval: rand(30s)
     transform:
       json: 
         rootPath: results
@@ -51,7 +51,7 @@ targets:
   - name: ping local
     target: 127.0.0.1
     type: ping
-    interval: 3s
+    interval: 3m
   - name: telnet local 80
     target: 127.0.0.1:80
     type: telnet
