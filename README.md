@@ -144,7 +144,7 @@ targets: # 检测目标集合（target）
         extractNameFrom: name # 将json对象中哪个属性映射name，默认从name提取
         extractNameFromProperty: false # 如果为true, 则将json对象所有属性提取为kv，忽略extractNameFrom配置。默认false
         extractContentFrom: msg # 将json对象中哪个属性映射content，默认从content提取
-        mapper: # 对获取的值替换，如将Healthy替换为0
+        contentMapper: # 对获取的值替换，如将Healthy替换为0
           Healthy: 1
           Unhealthy: 0
 ```

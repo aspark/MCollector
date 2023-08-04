@@ -24,8 +24,8 @@ namespace MCollector.Core.Transformers
             results = list;
 
             //改为不区分大小写
-            if (args.Mapper != null)
-                args.Mapper = new Dictionary<string, string>(args.Mapper, StringComparer.InvariantCultureIgnoreCase);
+            if (args.ContentMapper != null)
+                args.ContentMapper = new Dictionary<string, string>(args.ContentMapper, StringComparer.InvariantCultureIgnoreCase);
 
             if (string.IsNullOrEmpty(rawData.Content) == false)
             {
@@ -72,11 +72,11 @@ namespace MCollector.Core.Transformers
                     data.Name += (">" + prop.Name);
                     if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array)
                     {
-                        data.Content = MapContent(prop.Value, args.ExtractContentFrom, args.Mapper);
+                        data.Content = MapContent(prop.Value, args.ExtractContentFrom, args.ContentMapper);
                     }
                     else
                     {
-                        data.Content = MapContent(prop.Value, args.Mapper);
+                        data.Content = MapContent(prop.Value, args.ContentMapper);
                     }
 
                     items.Add(data);
@@ -92,7 +92,7 @@ namespace MCollector.Core.Transformers
                     data.Name += (">" + elName.GetString());
                     if (element.TryGetProperty(args.ExtractContentFrom, out JsonElement elContent))
                     {
-                        data.Content = MapContent(elContent, args.Mapper);
+                        data.Content = MapContent(elContent, args.ContentMapper);
 
                         items.Add(data);
 
@@ -166,7 +166,7 @@ namespace MCollector.Core.Transformers
 
         public string ExtractContentFrom { get; set; } = "content";
 
-        public Dictionary<string, string> Mapper { get; set; }
+        public Dictionary<string, string> ContentMapper { get; set; }
     }
 
     //public enum JsonMapType

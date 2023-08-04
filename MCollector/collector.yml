@@ -35,7 +35,7 @@ targets:
         extractNameFrom: name
         extractNameFromProperty: true
         extractContentFrom: status
-        mapper:
+        contentMapper:
          Healthy: 1
          Unhealthy: 0
          Degraded: 0
