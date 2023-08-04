@@ -23,19 +23,30 @@ namespace MCollector.Core.Transformers
             var list = new List<CollectedData>();
             results = list;
 
+            //改为不区分大小写
+            if (args.Mapper != null)
+                args.Mapper = new Dictionary<string, string>(args.Mapper, StringComparer.InvariantCultureIgnoreCase);
+
             if (string.IsNullOrEmpty(rawData.Content) == false)
             {
                 var json = JsonSerializer.Deserialize<JsonElement>(rawData.Content);
-                if (json.ValueKind == JsonValueKind.Array)
+
+                var root = json;
+                if (!string.IsNullOrWhiteSpace(args.RootPath))
                 {
-                    foreach (JsonElement jsonItem in json.EnumerateArray())
+                    root = GetElement(root, args.RootPath);
+                }
+
+                if (root.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (JsonElement jsonItem in root.EnumerateArray())
                     {
                         AppendItem(rawData, args, jsonItem, ref list);
                     }
                 }
-                else if (json.ValueKind == JsonValueKind.Object)
+                else if (root.ValueKind == JsonValueKind.Object)
                 {
-                    AppendItem(rawData, args, json, ref list);
+                    AppendItem(rawData, args, root, ref list);
                 }
 
                 results = list.AsEnumerable();
@@ -52,14 +63,22 @@ namespace MCollector.Core.Transformers
             //data.Duration = rawData.Duration;
             //data.IsSuccess = rawData.IsSuccess;
             //data.Headers = rawData.Headers;
-            CollectedData data;
-            if (args.ExtractAllProperties)
+
+            if (args.ExtractNameFromProperty)
             {
-                foreach(var prop in element.EnumerateObject())
+                foreach (var prop in element.EnumerateObject())
                 {
-                    data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
+                    CollectedData data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
                     data.Name += (">" + prop.Name);
-                    data.Content = prop.Value.GetString();
+                    if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        data.Content = MapContent(prop.Value, args.ExtractContentFrom, args.Mapper);
+                    }
+                    else
+                    {
+                        data.Content = MapContent(prop.Value, args.Mapper);
+                    }
+
                     items.Add(data);
                 }
 
@@ -67,13 +86,13 @@ namespace MCollector.Core.Transformers
             }
             else
             {
-                data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
                 if (element.TryGetProperty(args.ExtractNameFrom, out JsonElement elName))
                 {
+                    CollectedData data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
                     data.Name += (">" + elName.GetString());
                     if (element.TryGetProperty(args.ExtractContentFrom, out JsonElement elContent))
                     {
-                        data.Content = elContent.GetString();
+                        data.Content = MapContent(elContent, args.Mapper);
 
                         items.Add(data);
 
@@ -84,18 +103,70 @@ namespace MCollector.Core.Transformers
 
             return false;
         }
+
+        private string MapContent(JsonElement element, Dictionary<string, string> mapper)
+        {
+            var content = element.GetString() ?? "";
+
+            if (!string.IsNullOrEmpty(content) && mapper?.ContainsKey(content) == true)
+            {
+                return mapper[content];
+            }
+
+            return content;
+        }
+
+        private string MapContent(JsonElement element, string path, Dictionary<string, string> mapper)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                element = GetElement(element, path);
+            }
+
+            return MapContent(element, mapper);
+        }
+
+        private JsonElement GetElement(JsonElement element, string path)
+        {
+            var target = element;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                foreach (var seg in path.Split('.'))
+                {
+                    if (seg.EndsWith(']'))
+                    {
+                        var index = seg.Split('[', ']');
+                        target = target.GetProperty(index[0]);
+                        if (target.ValueKind == JsonValueKind.Array)
+                        {
+                            target = target[int.Parse(index[0])];
+                        }
+                    }
+                    else
+                    {
+                        target = target.GetProperty(seg);
+                    }
+                }
+            }
+
+            return target;
+        }
     }
 
     internal class JsonTransformerArgs
     {
-        public string ExtractNameFrom { get; set; } = "name";
+        public string RootPath { get; set; } = string.Empty;
 
-        public string ExtractContentFrom { get; set; } = "content";
+        public string ExtractNameFrom { get; set; } = "name";
 
         /// <summary>
         /// 将对象所有属性处理为kv
         /// </summary>
-        public bool ExtractAllProperties { get; set; } = false;
+        public bool ExtractNameFromProperty { get; set; } = false;
+
+        public string ExtractContentFrom { get; set; } = "content";
+
+        public Dictionary<string, string> Mapper { get; set; }
     }
 
     //public enum JsonMapType

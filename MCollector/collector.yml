@@ -25,14 +25,20 @@ targets:
     transform:
       search:
         text: "百度"
-  #- name: collect local and transform
-  #  target: "http://127.0.0.1:18086/status"
-  #  type: url
-  #  interval: 3000
-  #  transform:
-  #    json: 
-  #      extractNameFrom: name
-  #      extractContentFrom: msg
+  - name: dotnet health check
+    target: "http://localhost:44359/healthz"
+    type: url
+    interval: 3000
+    transform:
+      json: 
+        rootPath: results
+        extractNameFrom: name
+        extractNameFromProperty: true
+        extractContentFrom: status
+        mapper:
+         Healthy: 1
+         Unhealthy: 0
+         Degraded: 0
   - name: curl local with header
     target: "http://127.0.0.1"
     type: url
