@@ -105,7 +105,7 @@ targets: # 检测目标集合（target）
 逐条执行Contents中指定的命令行，任一语句执行失败则中止
 ``` yaml
   - name: name # 名称
-    target: "" # 【可忽略】
+    target: "" # 【可选】 win默认`cmd` linux默认`bin/bash`
     type: cmd
     interval: 3
     contents:

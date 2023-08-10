@@ -56,13 +56,18 @@ targets:
     target: 127.0.0.1:80
     type: telnet
     interval: 2.5s
-  - name: cmd
-    target: 127.0.0.1:80
+  - name: cmd test
     type: cmd
     interval: 5000ms
     contents:
-      - openssl s_client --connect www.baidu.com
-      - echo ok
+      - curl -v baidu.com
+      - echo test
     transform: 
      search:
-       text: sucess
+       text: text/html
+  #- name: cmd failed
+  #  target: cmd
+  #  type: cmd
+  #  interval: 5000ms
+  #  contents:
+  #    - notExist
