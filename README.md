@@ -16,6 +16,8 @@
 
 ## 运营接口
 > 需在配置文件`api`中启用
+
+
 1. `http://[ip:port]/status` 查看所有采集结果
 
 2. `http://[ip:port]/refresh` 触发重新采集
@@ -102,7 +104,7 @@ targets: # 检测目标集合（target）
 > 暂未实现将Contents内容发送到服务端
 
 ### `type: cmd`
-逐条执行Contents中指定的命令行，任一语句执行失败则中止
+逐条执行Contents中指定的命令行，~~任一语句执行失败则中止~~
 ``` yaml
   - name: name # 名称
     target: "" # 【可选】 win默认`cmd` linux默认`bin/bash`

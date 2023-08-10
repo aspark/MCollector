@@ -60,14 +60,14 @@ targets:
     type: cmd
     interval: 5000ms
     contents:
-      - curl -v baidu.com
+      - curl baidu.com
       - echo test
     transform: 
      search:
        text: text/html
-  #- name: cmd failed
-  #  target: cmd
-  #  type: cmd
-  #  interval: 5000ms
-  #  contents:
-  #    - notExist
+  - name: cmd failed
+    target: cmd
+    type: cmd
+    interval: 5000ms
+    contents:
+      - notExist

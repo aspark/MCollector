@@ -69,7 +69,7 @@ namespace MCollector.Core.Collectors
             using (var process = new Process() { StartInfo = info })
             {
                 var output = new List<string>();
-                //var error = new List<string>(); //curl使用的是error流输出的。。。
+                //var error = new List<string>(); //curl -v 使用的是error流输出的。。。
                 using var watier = new Waiter(1000);
 
                 process.Start();
@@ -82,6 +82,7 @@ namespace MCollector.Core.Collectors
 
                 process.ErrorDataReceived += (o, args) => {
                     watier.Reset();
+                    //data.IsSuccess = false;
                     if (args.Data != null)
                         output.Add(args.Data);
                 };
@@ -91,38 +92,51 @@ namespace MCollector.Core.Collectors
 
                 var prompts = new List<string>();
 
-                if (commands.Any())
+                try
                 {
-                    process.StandardInput.AutoFlush = true;
-
-                    foreach (var cmd in commands)
+                    if (commands.Any())
                     {
-                        if (!data.IsSuccess)
-                            break;
+                        process.StandardInput.AutoFlush = true;
 
-                        process.StandardInput.WriteLine(cmd);
-                        //process.StandardInput.Flush();
-
-                        //process.WaitForInputIdle();
-                        watier.WaitForIdle();
-                        //await ReadLines(process, output, error);
-
-                        if (output.Any())
+                        foreach (var cmd in commands)
                         {
-                            data.Content += (string.Join(Environment.NewLine, output) + Environment.NewLine);
-                            output.Clear();
-                        }
+                            if (!data.IsSuccess)
+                                break;
 
-                        //if (error.Any())
-                        //{
-                        //    data.Content += (string.Join(Environment.NewLine, error) + Environment.NewLine);
-                        //    error.Clear();
-                        //}
+                            process.StandardInput.WriteLine(cmd);
+                            //process.StandardInput.Flush();
+
+                            //process.WaitForInputIdle();
+                            watier.WaitForIdle();
+                            //await ReadLines(process, output, error);
+
+                            if (output.Any())
+                            {
+                                data.Content += (string.Join(Environment.NewLine, output) + Environment.NewLine);
+                                output.Clear();
+                            }
+
+                            //if (error.Any())
+                            //{
+                            //    data.Content += (string.Join(Environment.NewLine, error) + Environment.NewLine);
+                            //    error.Clear();
+                            //}
+                        }
                     }
+
+                    await process.StandardInput.DisposeAsync();
+                    await process.WaitForExitAsync();
+                }
+                catch (Exception ex)
+                {
+                    data.IsSuccess = false;
+                    data.Content += ex.GetBaseException().Message;
+
+                    return data;
                 }
 
-                await process.StandardInput.DisposeAsync();
-                await process.WaitForExitAsync();
+                if(data.IsSuccess)
+                    data.IsSuccess = process.ExitCode == 0;
             }
 
             return data;
