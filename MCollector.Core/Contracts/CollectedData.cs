@@ -4,6 +4,12 @@ namespace MCollector.Core.Contracts
 {
     public class CollectedData
     {
+        //public CollectedData(CollectedData from)
+        //{
+        //    this.Name = from.Name;
+        //    this.Target = from.Target;
+        //}
+
         public CollectedData(string name, CollectTarget target)
         {
             Name = name;

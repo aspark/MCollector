@@ -1,4 +1,5 @@
-﻿using MCollector.Core.Contracts;
+﻿using MCollector.Core.Common;
+using MCollector.Core.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace MCollector.Core.Transformers
                 var root = json;
                 if (!string.IsNullOrWhiteSpace(args.RootPath))
                 {
-                    root = GetElement(root, args.RootPath);
+                    root = SerializerHelper.GetElement(root, args.RootPath);
                 }
 
                 if (root.ValueKind == JsonValueKind.Array)
@@ -120,36 +121,10 @@ namespace MCollector.Core.Transformers
         {
             if (!string.IsNullOrWhiteSpace(path))
             {
-                element = GetElement(element, path);
+                element = SerializerHelper.GetElement(element, path);
             }
 
             return MapContent(element, mapper);
-        }
-
-        private JsonElement GetElement(JsonElement element, string path)
-        {
-            var target = element;
-            if (!string.IsNullOrWhiteSpace(path))
-            {
-                foreach (var seg in path.Split('.'))
-                {
-                    if (seg.EndsWith(']'))
-                    {
-                        var index = seg.Split('[', ']');
-                        target = target.GetProperty(index[0]);
-                        if (target.ValueKind == JsonValueKind.Array)
-                        {
-                            target = target[int.Parse(index[0])];
-                        }
-                    }
-                    else
-                    {
-                        target = target.GetProperty(seg);
-                    }
-                }
-            }
-
-            return target;
         }
     }
 

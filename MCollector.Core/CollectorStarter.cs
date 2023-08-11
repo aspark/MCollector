@@ -4,7 +4,10 @@ using MCollector.Core.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace MCollector.Core
 {
@@ -15,6 +18,7 @@ namespace MCollector.Core
         Dictionary<string, ICollector> _collectors = new Dictionary<string, ICollector>(StringComparer.InvariantCultureIgnoreCase);
         Dictionary<string, ITransformer> _transforms = new Dictionary<string, ITransformer>(StringComparer.InvariantCultureIgnoreCase);
 
+        ICollectTargetManager _targetManager;
         DefaultCollectedDataAccessor _dataAccessor;
         CollectorSignal _collectorSignal;
         IList<IExporter> _exporters;
@@ -22,11 +26,12 @@ namespace MCollector.Core
         CancellationTokenSource _tokenSource;
 
         public CollectorStarter(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, 
-            IOptions<CollectorConfig> config,  IList<ICollector> collectors, IList<ITransformer> transformers, IList<IExporter> exporters)//DefaultCollectedDataAccessor dataAccessor, CollectorSignal collectorSignal
+            IOptions<CollectorConfig> config, ICollectTargetManager targetManager,  IList<ICollector> collectors, IList<ITransformer> transformers, IList<IExporter> exporters)//DefaultCollectedDataAccessor dataAccessor, CollectorSignal collectorSignal
         {
             _logger = loggerFactory.CreateLogger<CollectorStarter>();
 
             _config = config.Value;
+            _targetManager = targetManager;
 
             if (!collectors.Any())
             {
@@ -48,6 +53,8 @@ namespace MCollector.Core
 
             _exporters = exporters;
         }
+        public CancellationToken CancellationToken { get => _tokenSource.Token; }
+
 
         public void Dispose()
         {
@@ -58,19 +65,21 @@ namespace MCollector.Core
 
             _tokenSource?.Cancel();
             _isRunning = false;
-            Task.WaitAll(_tasks.ToArray(), 300);
+            Task.WaitAll(_tasks.Values.Select(v => v.Task).ToArray(), 300);
             _tokenSource?.Dispose();
         }
 
-        private List<Task> _tasks = new List<Task>();
         public void Start()
         {
             _tokenSource = new CancellationTokenSource();
             _isRunning = true;
-            foreach (var target in _config.Targets)
+            
+            foreach (var target in _targetManager.GetAll())
             {
-                _tasks.Add(Task.Run(() => StartImpl(target), _tokenSource.Token));
+                StartImpl(target, CollectTargetChangedType.Add);
             }
+
+            _targetManager.AddChangedCallback(StartImpl);
 
             foreach (var exporter in _exporters)
             {
@@ -79,12 +88,82 @@ namespace MCollector.Core
         }
 
         bool _isRunning = false;
-        private async Task StartImpl(CollectTarget target)
+
+        private class TargetRunnerInfo : IDisposable
         {
-            if (_collectors.ContainsKey(target.Type))
+            CancellationTokenSource _cts;
+            CollectorStarter _starter;
+            public TargetRunnerInfo(CollectorStarter starter, CollectTarget target)
+            {
+                _cts = new CancellationTokenSource();
+                Target = target;
+                _starter = starter;
+                _starter.CancellationToken.Register(() => _cts.Cancel());
+            }
+
+            public CollectTarget Target { get; private set; }
+
+            private volatile int _isAlive = 1;
+
+            public bool IsAlive { get => _isAlive == 1; }
+
+            public CancellationToken CancellationToken { get => _cts.Token; }
+
+            public Task Task { get; set; }
+
+            //public TargetRunnerInfo Start()
+            //{
+            //    Task = Task.Run(() => _starter.StartAsync(this), CancellationToken);
+
+            //    return this;
+            //}
+
+            public void Dispose()
+            {
+                _cts.Cancel();
+                _isAlive = 0;
+            }
+        }
+
+        private ConcurrentDictionary<string, TargetRunnerInfo> _tasks = new ConcurrentDictionary<string, TargetRunnerInfo>();
+        private void StartImpl(CollectTarget target, CollectTargetChangedType type)
+        {
+            if (_isRunning)
+            {
+                if(type == CollectTargetChangedType.Delete)
+                {
+                    if (_tasks.TryRemove(target.Name, out TargetRunnerInfo old))
+                    {
+                        old.Dispose();
+                    }
+                }
+                else
+                {
+                    var runnerInfo = new TargetRunnerInfo(this, target);
+
+                    _tasks.AddOrUpdate(target.Name, k => StartImpl(runnerInfo), (k, o) => {
+                        o.Dispose();
+
+                        return StartImpl(runnerInfo);
+                    });
+                }
+            }
+        }
+
+        private TargetRunnerInfo StartImpl(TargetRunnerInfo info)
+        {
+            var task = Task.Run(() => StartAsync(info), info.CancellationToken);
+            info.Task = task;
+
+            return info;
+        }
+
+        private async Task StartAsync(TargetRunnerInfo info)
+        {
+            if (_collectors.ContainsKey(info.Target.Type))
             {
                 var stopwatch = new Stopwatch();
-                while (_isRunning)
+                while (_isRunning && info.IsAlive)
                 {
                     stopwatch.Restart();
                     IEnumerable<CollectedData> items;
@@ -92,28 +171,28 @@ namespace MCollector.Core
                     {
                         stopwatch.Start();
 
-                        var data = await _collectors[target.Type].Collect(target);
+                        var data = await _collectors[info.Target.Type].Collect(info.Target);
                         data.Duration = stopwatch.ElapsedMilliseconds;
                         data.LastCollectTime = DateTime.Now;
                         items = new [] { data };
 
-                        items = await Transform(items, target.Transform);
+                        items = await Transform(items, info.Target.Transform);
 
                         //push to results
-                        _dataAccessor.AddOrUpdate(target, items);
+                        _dataAccessor.AddOrUpdate(info.Target, items);
 
                         //await Task.Delay(target.Interval);
-                        _collectorSignal.Wait(target.GetInterval());
+                        _collectorSignal.Wait(info.Target.GetInterval());
                     }
                     catch(Exception ex) 
                     {
-                        items = new[] { new CollectedData(target.Name, target) { IsSuccess = false, Content = ex.Message } };
+                        items = new[] { new CollectedData(info.Target.Name, info.Target) { IsSuccess = false, Content = ex.Message } };
                     }
                 }
             }
             else
             {
-                _logger.LogWarning($"不存在{target.Type}的执行器");
+                _logger.LogWarning($"不存在{info.Target.Type}的执行器");
             }
         }
 

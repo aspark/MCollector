@@ -71,3 +71,10 @@ targets:
     interval: 5000ms
     contents:
       - notExist
+  - name: merge config
+    target: http://localhost/collector.yml.txt
+    type: url
+    interval: 5000ms
+    transform:
+      targets:
+        rootPath: data

@@ -6,7 +6,7 @@
 
 ## 部署
 
-直接执行：`dotnet MCollector.dll` 即可
+直接执行：`dotnet MCollector.dll` 即可，或以独立模式打包为可执行程序
 
 ### 容器方式
 `docker build .`
@@ -69,10 +69,10 @@ targets: # 检测目标集合（target）
 
 ## 采集方式
 ### `type: url`
-使用http get的方式请求目标
-1. 如配置了contents，所改用Post，并将Contents数据内容按字符拼接后放入request body
+使用http GET的方式请求目标
+1. 如配置了contents，将改用POST，并将Contents数据内容按字符拼接后放入request body
 1. 会自动跟踪302跳转
-1. 若返回http code大于400，侧判断为失败
+1. 若返回http code大于400，则判断为失败
 
 ``` yaml
   - name: name # 名称
@@ -82,7 +82,7 @@ targets: # 检测目标集合（target）
     headers: # 【可选】自定义http头
       Host: www.baidu.com
       Content-Type: application/json
-    contents: # 【可选】提交的内容，若有值，会使用post方式，将所有contents放入body中
+    contents: # 【可选】提交的内容，若有值，会使用post方式，并将所有contents放入body中
       - "{test:1}"
 ```
 
@@ -104,7 +104,7 @@ targets: # 检测目标集合（target）
 > 暂未实现将Contents内容发送到服务端
 
 ### `type: cmd`
-逐条执行Contents中指定的命令行，~~任一语句执行失败则中止~~
+在一个会话中逐条执行Contents中的命令行，~~任一语句执行失败则中止~~
 ``` yaml
   - name: name # 名称
     target: "" # 【可选】 win默认`cmd` linux默认`bin/bash`
@@ -129,7 +129,7 @@ targets: # 检测目标集合（target）
         }
     }
 ```
-将上面的编译dll放入Plugins目录中，再在collector.yml中添加如下即可：
+将上面的编译dll放入Plugins目录中，再在collector.yml中添加如下即可（会自动将yml注入到参数中）：
 
 ``` yaml
   - name: tencent cloud demo
@@ -142,7 +142,7 @@ targets: # 检测目标集合（target）
 ### OAuth
 > todo
 
-## 转换(transformer)
+## 转换器(transformer)
 可以使用多个tranformer串联执行，当CollectedData的IsSuccess为false或标记为Final时，中止执行后续transformer
 ### `json`
 将采集的内容以json格式解析，如果返回内容是数组类型，则会将转换应用到数组中的每个对象上，这种情况下会生成多条采集结果
@@ -166,6 +166,23 @@ targets: # 检测目标集合（target）
     transform: 
      search:
        text: xxxx # 需要搜索的字符串内容
+```
+
+### `targets`
+将收集到的信息转换为target并合并到本地配置中，主要用于动态加载targets配置
+1. 如果返回是内容以`{`或`[`字符开头，会以json反序列化，否则使用yml反序列化
+1. 默认忽略返回的cmd类型收集器
+1. 该转换会覆盖本地的target配置
+
+``` ymal
+  - name: merge config
+    target: http://localhost/config_mc
+    type: url
+    interval: 5000ms
+    transform:
+      targets:
+        rootPath: data # 仅json格式时有效，yml默认targets
+      targets: null
 ```
 
 ### 自定义转换
@@ -230,7 +247,7 @@ internal class CustomExporter : IExporter, IDisposable, IAsSingleton, IObserver<
 
 
 ## 插件
-MetricsCollector会加下Plugins目录下的所有dll，如可实现`ICollector`、`IExporter`、`ITransformer`等接口来自定义检测方式、数据转换等
+MetricsCollector会自动加载Plugins目录下的所有dll，如可实现`ICollector`、`IExporter`、`ITransformer`等接口来自定义检测方式、数据转换等
 
 ## Dev说明
 

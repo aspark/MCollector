@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MCollector.Core.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace MCollector.Core.Contracts
         private string _name;
 
         /// <summary>
-        /// 名称
+        /// 名称，唯一标识
         /// </summary>
         public string Name
         {
@@ -129,14 +130,18 @@ namespace MCollector.Core.Contracts
         public string[]? Contents { get; set; }
 
         /// <summary>
+        /// 配置来源，上游来源，一般为空，如果是CollectTarget的Version，默认随机值，说明没有上游
+        /// </summary>
+        internal string Trace { get; set; } = Guid.NewGuid().ToString("n");
+
+        /// <summary>
         /// 对返回内容的转换器
         /// </summary>
         public Dictionary<string, Dictionary<string, object>> Transform { get; set; }
 
-        private string SHA1(string content)
+        public string GetVersion()
         {
-            using var hash = System.Security.Cryptography.SHA1.Create();
-            return Convert.ToHexString(hash.ComputeHash(Encoding.UTF8.GetBytes(content))).ToLower();
+            return HashHelper.SHA1(SerializerHelper.ToPlainString(this));
         }
     }
 }

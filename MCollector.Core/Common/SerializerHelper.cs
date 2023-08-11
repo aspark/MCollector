@@ -3,6 +3,8 @@ using YamlDotNet.Serialization;
 using System.Reflection;
 using System.Xml.Linq;
 using System.ComponentModel;
+using System.Text.Json;
+using YamlDotNet.Core.Tokens;
 
 namespace MCollector.Core.Common
 {
@@ -11,6 +13,11 @@ namespace MCollector.Core.Common
         public static T Deserialize<T>(Dictionary<string, object> values) where T : class, new()
         {
             return Deserialize<T>(new Serializer().Serialize(values));
+        }
+
+        public static string ToPlainString(object obj)
+        {
+            return new Serializer().Serialize(obj)?.Replace("\r", "")?.Replace("\n", "")?.Replace(" ", "") ?? "";
         }
 
         public static T Deserialize<T>(string content) where T : class, new()
@@ -46,6 +53,32 @@ namespace MCollector.Core.Common
             }
 
             return obj;
+        }
+
+        public static JsonElement GetElement(JsonElement element, string path)
+        {
+            var target = element;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                foreach (var seg in path.Split('.'))
+                {
+                    if (seg.EndsWith(']'))
+                    {
+                        var index = seg.Split('[', ']');
+                        target = target.GetProperty(index[0]);
+                        if (target.ValueKind == JsonValueKind.Array)
+                        {
+                            target = target[int.Parse(index[0])];
+                        }
+                    }
+                    else
+                    {
+                        target = target.GetProperty(seg);
+                    }
+                }
+            }
+
+            return target;
         }
     }
 }
