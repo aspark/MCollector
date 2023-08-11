@@ -4,11 +4,11 @@ using MCollector.Core.Contracts;
 
 namespace MCollector.Core.Results
 {
-    internal class DefaultCollectedDataAccessor : ICollectedDataPool, IAsSingleton, IDisposable
+    internal class DefaultCollectedDataPool : ICollectedDataPool, IAsSingleton, IDisposable
     {
         private ConcurrentDictionary<CollectTarget, IEnumerable<CollectedData>> _collectedData = new ConcurrentDictionary<CollectTarget, IEnumerable<CollectedData>>();
 
-        public DefaultCollectedDataAccessor()
+        public DefaultCollectedDataPool()
         {
             
         }
@@ -55,6 +55,11 @@ namespace MCollector.Core.Results
 
                 Task.Run(() => DataChanged?.Invoke(this, items));
             }
+        }
+
+        public void Remove(CollectTarget target)
+        {
+            _collectedData.TryRemove(target, out _);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace MCollector.Core
         Dictionary<string, ITransformer> _transforms = new Dictionary<string, ITransformer>(StringComparer.InvariantCultureIgnoreCase);
 
         ICollectTargetManager _targetManager;
-        DefaultCollectedDataAccessor _dataAccessor;
+        DefaultCollectedDataPool _dataPool;
         CollectorSignal _collectorSignal;
         IList<IExporter> _exporters;
 
@@ -48,7 +48,7 @@ namespace MCollector.Core
                 _transforms[tranformer.Name] = tranformer;
             }
 
-            _dataAccessor = serviceProvider.GetRequiredService<DefaultCollectedDataAccessor>();
+            _dataPool = serviceProvider.GetRequiredService<DefaultCollectedDataPool>();
             _collectorSignal = serviceProvider.GetRequiredService<CollectorSignal>();
 
             _exporters = exporters;
@@ -93,11 +93,13 @@ namespace MCollector.Core
         {
             CancellationTokenSource _cts;
             CollectorStarter _starter;
-            public TargetRunnerInfo(CollectorStarter starter, CollectTarget target)
+            DefaultCollectedDataPool _dataPool;
+            public TargetRunnerInfo(CollectorStarter starter, DefaultCollectedDataPool dataPool, CollectTarget target)
             {
                 _cts = new CancellationTokenSource();
                 Target = target;
                 _starter = starter;
+                _dataPool = dataPool;
                 _starter.CancellationToken.Register(() => _cts.Cancel());
             }
 
@@ -120,6 +122,7 @@ namespace MCollector.Core
 
             public void Dispose()
             {
+                _dataPool.Remove(Target);
                 _cts.Cancel();
                 _isAlive = 0;
             }
@@ -139,7 +142,7 @@ namespace MCollector.Core
                 }
                 else
                 {
-                    var runnerInfo = new TargetRunnerInfo(this, target);
+                    var runnerInfo = new TargetRunnerInfo(this, _dataPool, target);
 
                     _tasks.AddOrUpdate(target.Name, k => StartImpl(runnerInfo), (k, o) => {
                         o.Dispose();
@@ -179,7 +182,7 @@ namespace MCollector.Core
                         items = await Transform(items, info.Target.Transform);
 
                         //push to results
-                        _dataAccessor.AddOrUpdate(info.Target, items);
+                        _dataPool.AddOrUpdate(info.Target, items);
 
                         //await Task.Delay(target.Interval);
                         _collectorSignal.Wait(info.Target.GetInterval());

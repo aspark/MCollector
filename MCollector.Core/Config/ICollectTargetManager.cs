@@ -36,12 +36,12 @@ namespace MCollector.Core.Config
         {
             _config = config.Value;
             _targets = new ConcurrentDictionary<string, CollectTarget>();
-            //foreach(var target in _config.Targets)
-            //{
-            //    _targets[target.Name] = target;
-            //}
+            foreach (var target in _config.Targets)
+            {
+                _targets[target.Name] = target;
+            }
 
-            Merge(_config.Targets);
+            //Merge(_config.Targets);
         }
 
         //以Name为准，所以远程的会覆盖本址的target
@@ -54,7 +54,10 @@ namespace MCollector.Core.Config
                 //同相来源的，如果不在Merge list中，则会移除
                 foreach (var deleted in _targets.Values.Where(v => newTrace.Contains(v.Trace) && !newNames.Contains(v.Name)))
                 {
-                    Callback(deleted, CollectTargetChangedType.Delete);
+                    if(_targets.TryRemove(deleted.Name, out _))
+                    {
+                        Callback(deleted, CollectTargetChangedType.Delete);
+                    }
                 }
 
                 foreach (var item in list)
