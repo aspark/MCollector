@@ -74,31 +74,31 @@ namespace MCollector.Core.Collectors
 
                 var res = await client.SendAsync(msg, cts.Token);
                 isCompleted = true;
-                
-                if(cts.Token.IsCancellationRequested)
+
+                data.IsSuccess = (int)res.StatusCode < 400;
+                data.Headers = res.Headers.ToDictionary(h => h.Key, h => (object)string.Join(",", h.Value));
+                //data.Code = (int)res.StatusCode;
+                if (data.IsSuccess)
                 {
-                    data.IsSuccess = false;
-                    data.Content = "请求超时";
+                    data.Content = await res.Content.ReadAsStringAsync();
                 }
                 else
                 {
-                    data.IsSuccess = (int)res.StatusCode < 400;
-                    data.Headers = res.Headers.ToDictionary(h => h.Key, h => (object)string.Join(",", h.Value));
-                    //data.Code = (int)res.StatusCode;
-                    if (data.IsSuccess)
-                    {
-                        data.Content = await res.Content.ReadAsStringAsync();
-                    }
-                    else
-                    {
-                        data.Content = ((int)res.StatusCode).ToString();
-                    }
+                    data.Content = ((int)res.StatusCode).ToString();
                 }
             }
             catch (Exception ex)
             {
+                if((ex is TaskCanceledException cex) && cex.CancellationToken.IsCancellationRequested == true)
+                {
+                    data.Content = "请求超时";
+                }
+                else
+                {
+                    data.Content = ex.GetBaseException()?.Message;
+                }
+
                 data.IsSuccess = false;
-                data.Content = ex.GetBaseException()?.Message;
             }
 
             return data;

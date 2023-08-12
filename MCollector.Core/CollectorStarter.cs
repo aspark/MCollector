@@ -58,15 +58,19 @@ namespace MCollector.Core
 
         public void Dispose()
         {
+            _isRunning = false;
+            _tokenSource?.Cancel();
+            _collectorSignal.Continue();
+
             foreach (var exporter in _exporters)
             {
                 exporter.Stop();
             }
 
-            _tokenSource?.Cancel();
-            _isRunning = false;
             Task.WaitAll(_tasks.Values.Select(v => v.Task).ToArray(), 300);
+
             _tokenSource?.Dispose();
+            _collectorSignal.Dispose();
         }
 
         public void Start()
@@ -105,9 +109,8 @@ namespace MCollector.Core
 
             public CollectTarget Target { get; private set; }
 
-            private volatile int _isAlive = 1;
-
-            public bool IsAlive { get => _isAlive == 1; }
+            private volatile bool _isAlive = true;
+            public bool IsAlive { get => _isAlive; }
 
             public CancellationToken CancellationToken { get => _cts.Token; }
 
@@ -122,9 +125,9 @@ namespace MCollector.Core
 
             public void Dispose()
             {
-                _dataPool.Remove(Target);
+                _isAlive = false;
                 _cts.Cancel();
-                _isAlive = 0;
+                _dataPool.Remove(Target);
             }
         }
 
@@ -181,11 +184,14 @@ namespace MCollector.Core
 
                         items = await Transform(items, info.Target.Transform);
 
-                        //push to results
-                        _dataPool.AddOrUpdate(info.Target, items);
+                        if(info.IsAlive)
+                        {
+                            //push to results
+                            _dataPool.AddOrUpdate(info.Target, items);
 
-                        //await Task.Delay(target.Interval);
-                        _collectorSignal.Wait(info.Target.GetInterval());
+                            //await Task.Delay(target.Interval);
+                            _collectorSignal.Wait(info.Target.GetInterval());
+                        }
                     }
                     catch(Exception ex) 
                     {
