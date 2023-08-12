@@ -183,19 +183,29 @@ namespace MCollector.Core
                         items = new [] { data };
 
                         items = await Transform(items, info.Target.Transform);
-
-                        if(info.IsAlive)
-                        {
-                            //push to results
-                            _dataPool.AddOrUpdate(info.Target, items);
-
-                            //await Task.Delay(target.Interval);
-                            _collectorSignal.Wait(info.Target.GetInterval());
-                        }
                     }
                     catch(Exception ex) 
                     {
                         items = new[] { new CollectedData(info.Target.Name, info.Target) { IsSuccess = false, Content = ex.Message } };
+                    }
+
+                    if (info.IsAlive)
+                    {
+                        try
+                        {
+                            if(items?.Any() == true)
+                            {
+                                //push to results
+                                _dataPool.AddOrUpdate(info.Target, items);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+
+                        //await Task.Delay(target.Interval);
+                        _collectorSignal.Wait(info.Target.GetInterval());
                     }
                 }
             }
