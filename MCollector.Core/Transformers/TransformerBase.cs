@@ -19,7 +19,7 @@ namespace MCollector.Core.Transformers
                     results.AddRange(transformedItems);
                 }
                 else
-                {
+                {//转换失败，原样返回
                     results.Add(item);
                 }
             }
@@ -27,6 +27,13 @@ namespace MCollector.Core.Transformers
             return Task.FromResult(results.AsEnumerable());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rawData"></param>
+        /// <param name="args"></param>
+        /// <param name="results"></param>
+        /// <returns>返回是否转换成功，如果失败则会将传入的item原样返回</returns>
         public abstract bool Transform(CollectedData rawData, T args, out IEnumerable<CollectedData> results);
 
         private T? ConvertArgs(Dictionary<string, object> args)

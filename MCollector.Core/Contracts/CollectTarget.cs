@@ -52,7 +52,7 @@ namespace MCollector.Core.Contracts
             {
                 lock (this)
                 {
-                    if(_fnInterval ==null)
+                    if (_fnInterval == null)
                     {
                         if (Interval.StartsWith("rand", StringComparison.InvariantCultureIgnoreCase))
                         {
@@ -109,6 +109,9 @@ namespace MCollector.Core.Contracts
                     case "m":
                         t = (int)(num * 60 * 1000);
                         break;
+                    case "h":
+                        t = (int)(num * 60 * 60 * 1000);
+                        break;
                     default:
                     case "s":
                         t = (int)(num * 1000);
@@ -133,6 +136,8 @@ namespace MCollector.Core.Contracts
         /// 配置来源，上游来源，一般为空，如果是CollectTarget的Version，默认随机值，说明没有上游
         /// </summary>
         internal string Trace { get; set; } = Guid.NewGuid().ToString("n");
+
+        public Dictionary<string, Dictionary<string, object>> Prepare { get; set; }
 
         /// <summary>
         /// 对返回内容的转换器

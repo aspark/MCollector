@@ -36,9 +36,9 @@ targets:
         extractNameFromProperty: true
         extractContentFrom: status
         contentMapper:
-         Healthy: 1
-         Unhealthy: 0
-         Degraded: 0
+          Healthy: 1
+          Unhealthy: 0
+          Degraded: 0
   - name: curl local with header
     target: "http://127.0.0.1"
     type: url
@@ -48,6 +48,7 @@ targets:
       Content-Type: application/json
     contents:
       - "{test:1}"
+    prepare: null
   - name: ping local
     target: 127.0.0.1
     type: ping

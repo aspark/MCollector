@@ -40,7 +40,7 @@ targets: # 检测目标集合（target）
   - name: curl local # 名称
     target: "http://127.0.0.1" # 目标
     type: url # 采集方式
-    interval: 3 # 检测间隔时间，单位：s，默认3s，也可使用ms,m,rand(10s,20s),rand(10s)等单位
+    interval: 3 # 检测间隔时间，单位：s，默认3s，也可使用ms,m,h,rand(10s,20s),rand(10s)等单位
     headers: # 【可选】头信息，键值对
       Host: xxx.com
       Content-Type: application/json
@@ -62,7 +62,7 @@ targets: # 检测目标集合（target）
 | name | string | 名称 |
 | target | string | 目标地址 |
 | type | string | 使用的Collector名称 |
-| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内浮动 |
+| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟)、h(小时) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内浮动 |
 | headers | dictionary | 请求头 |
 | contents | string[] | 请求消息体 |
 | transform | dictionary | 结果转换 |

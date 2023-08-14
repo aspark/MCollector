@@ -11,9 +11,9 @@ namespace MCollector.Models
         public string Name { get; set; }
 
         /// <summary>
-        /// 是否健康
+        /// 是否成功
         /// </summary>
-        public bool IsHealth { get;set; }
+        public bool IsSuccess { get;set; }
 
         /// <summary>
         /// 执行耗时

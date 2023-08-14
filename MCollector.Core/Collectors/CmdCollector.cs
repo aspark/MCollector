@@ -70,7 +70,7 @@ namespace MCollector.Core.Collectors
             {
                 var output = new List<string>();
                 //var error = new List<string>(); //curl -v 使用的是error流输出的。。。
-                using var watier = new Waiter(1000);
+                using var watier = new Waiter(1500);
 
                 process.Start();
 

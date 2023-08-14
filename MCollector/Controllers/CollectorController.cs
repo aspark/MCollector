@@ -35,7 +35,7 @@ namespace MCollector.Controllers
         {
             if(_config.Api?.Status == true)
             {
-                var items = _dataPool.GetData().Select(d => new CollectedResult() { Duration = d.Duration, IsHealth = d.IsSuccess, Msg = d.IsSuccess ? "" : d.Content, LastUpdateTime = d.LastCollectTime, Name = d.Name });
+                var items = _dataPool.GetData().Select(d => new CollectedResult() { Duration = d.Duration, IsSuccess = d.IsSuccess, Msg = d.IsSuccess ? "" : d.Content, LastUpdateTime = d.LastCollectTime, Name = d.Name });
 
                 return Ok(items);
             }

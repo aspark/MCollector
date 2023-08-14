@@ -52,7 +52,13 @@ namespace MCollector.Core.Transformers
 
                 results = list.AsEnumerable();
 
-                return list.Any();
+                if (list.Any())
+                {
+                    if(args.ReserveRawData)
+                        list.Insert(0, rawData);
+
+                    return true;
+                }
             }
 
             return false;
@@ -70,6 +76,8 @@ namespace MCollector.Core.Transformers
                 foreach (var prop in element.EnumerateObject())
                 {
                     CollectedData data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
+                    data.IsSuccess = true;//属于新转换的内容了，所以重新附值
+                    data.LastCollectTime = DateTime.Now;
                     data.Name += (">" + prop.Name);
                     if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array)
                     {
@@ -91,6 +99,8 @@ namespace MCollector.Core.Transformers
                 {
                     CollectedData data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
                     data.Name += (">" + elName.GetString());
+                    data.IsSuccess = true;
+                    data.LastCollectTime = DateTime.Now;
                     if (element.TryGetProperty(args.ExtractContentFrom, out JsonElement elContent))
                     {
                         data.Content = MapContent(elContent, args.ContentMapper);
@@ -142,6 +152,11 @@ namespace MCollector.Core.Transformers
         public string ExtractContentFrom { get; set; } = "content";
 
         public Dictionary<string, string> ContentMapper { get; set; }
+
+        /// <summary>
+        /// 是否保留原target data
+        /// </summary>
+        public bool ReserveRawData { get; set; } = true;
     }
 
     //public enum JsonMapType

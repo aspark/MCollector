@@ -75,14 +75,11 @@ namespace MCollector.Core.Collectors
                 var res = await client.SendAsync(msg, cts.Token);
                 isCompleted = true;
 
-                data.IsSuccess = (int)res.StatusCode < 400;
+                data.IsSuccess = (int)res.StatusCode < 400;//400以上认为采集失败，但还是会继续处理body内容
                 data.Headers = res.Headers.ToDictionary(h => h.Key, h => (object)string.Join(",", h.Value));
                 //data.Code = (int)res.StatusCode;
-                if (data.IsSuccess)
-                {
-                    data.Content = await res.Content.ReadAsStringAsync();
-                }
-                else
+                data.Content = await res.Content.ReadAsStringAsync();
+                if (!data.IsSuccess && string.IsNullOrWhiteSpace(data.Content))
                 {
                     data.Content = ((int)res.StatusCode).ToString();
                 }
