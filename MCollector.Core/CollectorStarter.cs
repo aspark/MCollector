@@ -197,6 +197,7 @@ namespace MCollector.Core
                     }
                     catch(Exception ex) 
                     {
+                        Console.WriteLine(ex.ToString());
                         items = new[] { new CollectedData(info.Target.Name, info.Target) { IsSuccess = false, Content = ex.Message } };
                     }
 

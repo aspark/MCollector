@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using YamlDotNet.Core.Tokens;
 using YamlDotNet.Serialization;
 
 namespace MCollector.Plugins.AgileConfig
@@ -49,14 +50,16 @@ namespace MCollector.Plugins.AgileConfig
                     //_configClient.
                     if (_configClient.Data.Any())
                     {
-                        JToken token = Regex.IsMatch(_configClient.Data.First().Key, @"^\d") ? new JArray() : new JObject();//{[targets:0:name, from agile]} agile无法将数组配置到根
+                        //JToken token = Regex.IsMatch(_configClient.Data.First().Key, @"^\d") ? new JArray() : new JObject();//{[targets:0:name, from agile]} agile无法将数组配置到根
 
-                        foreach (var pair in _configClient.Data.OrderBy(p=>p.Key))
-                        {
-                            Add(token, pair.Key, pair.Value);
-                        }
+                        //foreach (var pair in _configClient.Data.OrderBy(p=>p.Key))
+                        //{
+                        //    Add(token, pair.Key, pair.Value);
+                        //}
+                        //content = JsonConvert.SerializeObject(token);
 
-                        content = JsonConvert.SerializeObject(token);
+                        content = DictionaryConvertToJson.ToJson(_configClient.Data);
+
                         data.Content = content;
                     }
 
@@ -77,50 +80,50 @@ namespace MCollector.Plugins.AgileConfig
             return data;
         }
 
-        private void Add(JToken jToken, string key, string value)
-        {
-            var components = key.Split(":", 3);
-            if (components.Length == 1)
-            {
-                // Leaf node
-                if (jToken is JArray jArray_)
-                {
-                    jArray_.Add(value);
-                }
-                else
-                {
-                    jToken[components[0]] = value;
-                }
-                return;
-            }
+        //private void Add(JToken jToken, string key, string value)
+        //{
+        //    var components = key.Split(":", 3);
+        //    if (components.Length == 1)
+        //    {
+        //        // Leaf node
+        //        if (jToken is JArray jArray_)
+        //        {
+        //            jArray_.Add(value);
+        //        }
+        //        else
+        //        {
+        //            jToken[components[0]] = value;
+        //        }
+        //        return;
+        //    }
 
-            // Next level
-            JToken nextToken;
-            var nextTokenIsAnArray = int.TryParse(components[1], out _);
-            if (jToken is JArray jArray)
-            {
-                var index = int.Parse(components[0]);
-                if (jArray.Count == index)
-                {
-                    nextToken = nextTokenIsAnArray ? new JArray() : (JToken)new JObject();
-                    jArray.Add(nextToken);
-                }
-                else
-                {
-                    nextToken = jArray[index];
-                }
-            }
-            else
-            {
-                nextToken = jToken[components[0]];
-                if (nextToken == null)
-                {
-                    nextToken = jToken[components[0]] = nextTokenIsAnArray ? new JArray() : (JToken)new JObject();
-                }
-            }
+        //    // Next level
+        //    JToken nextToken;
+        //    var nextTokenIsAnArray = int.TryParse(components[1], out _);
+        //    if (jToken is JArray jArray)
+        //    {
+        //        var index = int.Parse(components[0]);
+        //        if (jArray.Count == index)
+        //        {
+        //            nextToken = nextTokenIsAnArray ? new JArray() : (JToken)new JObject();
+        //            jArray.Add(nextToken);
+        //        }
+        //        else
+        //        {
+        //            nextToken = jArray[index];
+        //        }
+        //    }
+        //    else
+        //    {
+        //        nextToken = jToken[components[0]];
+        //        if (nextToken == null)
+        //        {
+        //            nextToken = jToken[components[0]] = nextTokenIsAnArray ? new JArray() : (JToken)new JObject();
+        //        }
+        //    }
 
-            Add(nextToken, key[(components[0].Length + 1)..], value);
-        }
+        //    Add(nextToken, key[(components[0].Length + 1)..], value);
+        //}
 
 
         public void Dispose()
