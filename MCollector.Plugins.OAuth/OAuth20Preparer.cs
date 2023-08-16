@@ -19,8 +19,8 @@ namespace MCollector.Plugins.OAuth
             var request = new ClientCredentialsTokenRequest
             {
                 Address = args.Address,
-                ClientId = "client",
-                ClientSecret = "secret"
+                ClientId = args.ClientId,
+                ClientSecret = args.ClientSecret
             };
 
             var client = _httpClientFactory.CreateClient();

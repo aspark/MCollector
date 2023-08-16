@@ -223,7 +223,7 @@ es索引状态收集，**固定搭配transform:json使用**
 ```yaml
     prepare: 
       oauth21: # prepare名称
-        address: xxx # sp 服务地址
+        address: xxx # sp token 服务地址
         clientId: xxx # 分配的clientid
         clientSecret: xxx # 分配的秘钥
 ```

@@ -14,7 +14,7 @@ targets:
     interval: 3
     prepare: 
       oauth20: 
-        address: xxx
+        address: http://127.0.0.1/oauth
         clientId: xxx
         clientSecret: xxx
   - name: curl baidu
