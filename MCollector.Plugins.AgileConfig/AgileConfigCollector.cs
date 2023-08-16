@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using YamlDotNet.Serialization;
 
 namespace MCollector.Plugins.AgileConfig
 {
@@ -21,7 +22,18 @@ namespace MCollector.Plugins.AgileConfig
 
             var data = new CollectedData(target.Name, target);
 
-            var _configClient = _clients.GetOrAdd(target.Name, k => new ConfigClient(opts));
+            var _configClient = _clients.GetOrAdd(target.Name, k => new ConfigClient(new ConfigClientOptions
+            {
+                AppId = opts.AppId,
+                Secret = opts.Secret,
+                Nodes = opts.Nodes,
+                Name = opts.Name,
+                Tag = opts.Tag,
+                ENV = opts.Env,
+                HttpTimeout = opts.HttpTimeout,
+                CacheDirectory = opts.CacheDirectory,
+                ConfigCacheEncrypt = opts.ConfigCacheEncrypt
+            }));
             //var _configClient = new ConfigClient(opts);
             try
             {
@@ -121,9 +133,29 @@ namespace MCollector.Plugins.AgileConfig
     }
 
     //使用ConfigClientOptions即可
-    internal class AgileConfigCollectorArgs: ConfigClientOptions
+    internal class AgileConfigCollectorArgs//: ConfigClientOptions env全大写，无法反序列化。。。
     {
-        //读取的路径
-        public string Path { get; set; } = "targets";
+        ////读取的路径
+        //public string Path { get; set; } = "targets";
+
+        public string AppId { get; set; }
+
+        public string Secret { get; set; }
+
+        public string Nodes { get; set; }
+
+        public string Name { get; set; }
+
+        public string Tag { get; set; }
+
+        [YamlMember(Alias = "env")]
+        public string Env { get; set; } = "PROD";
+
+        public int HttpTimeout { get; set; } = 100;
+
+
+        public string CacheDirectory { get; set; }
+
+        public bool ConfigCacheEncrypt { get; set; }
     }
 }
