@@ -6,7 +6,7 @@ namespace MCollector.Core.Results
 {
     internal class DefaultCollectedDataPool : ICollectedDataPool, IAsSingleton, IDisposable
     {
-        private ConcurrentDictionary<CollectTarget, IEnumerable<CollectedData>> _collectedData = new ConcurrentDictionary<CollectTarget, IEnumerable<CollectedData>>();
+        private ConcurrentDictionary<string, IEnumerable<CollectedData>> _collectedData = new ConcurrentDictionary<string, IEnumerable<CollectedData>>();
 
         public DefaultCollectedDataPool()
         {
@@ -39,7 +39,7 @@ namespace MCollector.Core.Results
         {
             if(items?.Any() == true)
             {
-                _collectedData.AddOrUpdate(target, items, (k, o) => items);
+                _collectedData.AddOrUpdate(target.Name, items, (k, o) => items);
 
                 _observers.ForEach(o =>
                 {
@@ -59,7 +59,7 @@ namespace MCollector.Core.Results
 
         public void Remove(CollectTarget target)
         {
-            _collectedData.TryRemove(target, out _);
+            _collectedData.TryRemove(target.Name, out _);
         }
     }
 }

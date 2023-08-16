@@ -9,10 +9,14 @@ COPY . .
 RUN dotnet restore
 
 FROM build AS publish
+#常用的插件内置了：prometheus oauth2.0 es
+#需要将腾讯云的插件拷入
 RUN dotnet publish ./MCollector/MCollector.csproj -c Release -o /app/publish/MCollector \
- && dotnet publish ./MCollector.Plugins.Prometheus/MCollector.Plugins.Prometheus.csproj -c Release -o /app/publish/MCollector.Plugins.Prometheus \
- && mkdir -p /app/publish/MCollector/Plugins/Prometheus/ \
- && cp -r /app/publish/MCollector.Plugins.Prometheus/*.* /app/publish/MCollector/Plugins/Prometheus/
+ && dotnet publish ./MCollector.Plugins.TencentCloud/MCollector.Plugins.TencentCloud.csproj -c Release -o /app/publish/MCollector.Plugins.TencentCloud \
+ && mkdir -p /app/publish/MCollector/Plugins/TencentCloud/ \
+ && cp -r /app/publish/MCollector.Plugins.TencentCloud/*.* /app/publish/MCollector/Plugins/TencentCloud/
+
+#RUN dotnet publish ./MCollector/MCollector.csproj -c Release -o /app/publish/MCollector \
 
 FROM base AS final
 WORKDIR /app

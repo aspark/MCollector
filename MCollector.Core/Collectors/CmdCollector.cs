@@ -1,4 +1,5 @@
-﻿using MCollector.Core.Contracts;
+﻿using MCollector.Core.Common;
+using MCollector.Core.Contracts;
 using System.Diagnostics;
 using System.Text;
 
@@ -45,6 +46,8 @@ namespace MCollector.Core.Collectors
 
         private async Task<CollectedData> ExecuteAll(CollectTarget target)
         {
+            var opts = SerializerHelper.CreateFrom<CmdCollectorArgs>(target.Args) ?? new CmdCollectorArgs();
+
             (var app, var args) = ParseCmd(target.Target);
 
             //if (target.Contents != null && target.Contents.Any())
@@ -70,7 +73,7 @@ namespace MCollector.Core.Collectors
             {
                 var output = new List<string>();
                 //var error = new List<string>(); //curl -v 使用的是error流输出的。。。
-                using var watier = new Waiter(1500);
+                using var watier = new Waiter(opts.OutputTimeout);
 
                 process.Start();
 
@@ -201,7 +204,13 @@ namespace MCollector.Core.Collectors
         //}
     }
 
-
+    internal class CmdCollectorArgs
+    {
+        /// <summary>
+        /// 等待输出的超时时间
+        /// </summary>
+        public int OutputTimeout { get; set; } = 1500;
+    }
 
     //internal class CmdCollector : ICollector
     //{

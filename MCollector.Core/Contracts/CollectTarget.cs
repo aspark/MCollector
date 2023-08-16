@@ -33,6 +33,8 @@ namespace MCollector.Core.Contracts
         /// </summary>
         public string Type { get; set; }
 
+        public Dictionary<string, object> Args { get; set; }
+
         /// <summary>
         /// 目标
         /// </summary>

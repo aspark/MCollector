@@ -3,6 +3,7 @@ using MCollector.Core.Config;
 using MCollector.Core.Contracts;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -34,7 +35,7 @@ namespace MCollector.Core.Transformers
                 var targets = ConvertToTargets(rawData.Content, args);
                 if (targets?.Any() == true)
                 {
-                    targets = targets.Where(t => !string.Equals(t.Type, "cmd", StringComparison.InvariantCultureIgnoreCase)).ToList();//暂不从远程加载cmd类型的target
+                    targets = targets.Where(t => !string.IsNullOrWhiteSpace(t.Type) && !string.Equals(t.Type, "cmd", StringComparison.InvariantCultureIgnoreCase)).ToList();//暂不从远程加载cmd类型的target
                     targets.ForEach(t => t.Trace = rawData.Target.GetVersion());
                     _targetManager.Merge(targets);
                 }
@@ -63,7 +64,12 @@ namespace MCollector.Core.Transformers
                         root = SerializerHelper.GetElement(root, args.RootPath);
                     }
 
-                    var targets = root.Deserialize<List<CollectTarget>>();
+                    //Debug.WriteLine(JsonSerializer.Serialize(root));
+
+                    var targets = root.Deserialize<List<CollectTarget>>(new JsonSerializerOptions { PropertyNameCaseInsensitive = false, PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
+                    //var targets = JsonSerializer.Deserialize<List<CollectTarget>>(JsonSerializer.Serialize(root));
+
+                    return targets;
                 }
                 else//以yml格式
                 {

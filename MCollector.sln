@@ -17,6 +17,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.Promethe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.TencentCloud", "MCollector.Plugins.TencentCloud\MCollector.Plugins.TencentCloud.csproj", "{C646B298-3866-42DD-9C05-6FCBF9BEFC50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCollector.Plugins.OAuth", "MCollector.Plugins.OAuth\MCollector.Plugins.OAuth.csproj", "{90159B0E-AEE2-437C-BA6D-4A4FF38ED4AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCollector.Plugins.AgileConfig", "MCollector.Plugins.AgileConfig\MCollector.Plugins.AgileConfig.csproj", "{4E7B72DE-B788-4A4A-B841-6BD7F31EFF81}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.ES", "MCollector.Plugins.ES\MCollector.Plugins.ES.csproj", "{ED6D49FC-1769-4294-AD94-BE0C0F6C3449}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +45,18 @@ Global
 		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C646B298-3866-42DD-9C05-6FCBF9BEFC50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90159B0E-AEE2-437C-BA6D-4A4FF38ED4AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90159B0E-AEE2-437C-BA6D-4A4FF38ED4AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90159B0E-AEE2-437C-BA6D-4A4FF38ED4AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90159B0E-AEE2-437C-BA6D-4A4FF38ED4AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E7B72DE-B788-4A4A-B841-6BD7F31EFF81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E7B72DE-B788-4A4A-B841-6BD7F31EFF81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E7B72DE-B788-4A4A-B841-6BD7F31EFF81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E7B72DE-B788-4A4A-B841-6BD7F31EFF81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED6D49FC-1769-4294-AD94-BE0C0F6C3449}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED6D49FC-1769-4294-AD94-BE0C0F6C3449}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED6D49FC-1769-4294-AD94-BE0C0F6C3449}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED6D49FC-1769-4294-AD94-BE0C0F6C3449}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

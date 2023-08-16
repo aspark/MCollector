@@ -1,4 +1,5 @@
-﻿using MCollector.Core.Contracts;
+﻿using MCollector.Core.Common;
+using MCollector.Core.Contracts;
 using System.Diagnostics;
 
 namespace MCollector.Core.Collectors
@@ -21,6 +22,7 @@ namespace MCollector.Core.Collectors
         public virtual async Task<CollectedData> Collect(CollectTarget target)
         {
             var client = _httpClientFactory.CreateClient("default");
+            var args = SerializerHelper.CreateFrom<UrlCollectorArgs>(target.Args) ?? new UrlCollectorArgs();
 
             var msg = new HttpRequestMessage();
             msg.Method = HttpMethod.Get;
@@ -64,7 +66,7 @@ namespace MCollector.Core.Collectors
             try
             {
                 var isCompleted = false;
-                cts.CancelAfter(Math.Min(target.GetInterval(), 6000));//默认6秒超时
+                cts.CancelAfter(Math.Min(target.GetInterval(), args.Timeout));
                 //Task.Run(async () =>
                 //{
                 //    await Task.Delay(Math.Min(target.Interval, 6000), cts.Token);
@@ -100,5 +102,16 @@ namespace MCollector.Core.Collectors
 
             return data;
         }
+    }
+
+    internal class UrlCollectorArgs
+    {
+        //todo
+        public bool ReadResponseWhenFailed { get; set; } = true;
+
+        /// <summary>
+        /// 默认6秒超时
+        /// </summary>
+        public int Timeout { get; set; } = 6000;
     }
 }

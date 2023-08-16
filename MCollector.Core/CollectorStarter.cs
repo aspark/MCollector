@@ -16,6 +16,7 @@ namespace MCollector.Core
         ILogger _logger;
         CollectorConfig _config;
         Dictionary<string, ICollector> _collectors = new Dictionary<string, ICollector>(StringComparer.InvariantCultureIgnoreCase);
+        Dictionary<string, IPreparer> _preparers = new Dictionary<string, IPreparer>(StringComparer.InvariantCultureIgnoreCase);
         Dictionary<string, ITransformer> _transforms = new Dictionary<string, ITransformer>(StringComparer.InvariantCultureIgnoreCase);
 
         ICollectTargetManager _targetManager;
@@ -26,7 +27,7 @@ namespace MCollector.Core
         CancellationTokenSource _tokenSource;
 
         public CollectorStarter(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, 
-            IOptions<CollectorConfig> config, ICollectTargetManager targetManager,  IList<ICollector> collectors, IList<ITransformer> transformers, IList<IExporter> exporters)//DefaultCollectedDataAccessor dataAccessor, CollectorSignal collectorSignal
+            IOptions<CollectorConfig> config, ICollectTargetManager targetManager,  IList<ICollector> collectors, IList<ITransformer> transformers, IList<IPreparer> preparers, IList<IExporter> exporters)//DefaultCollectedDataAccessor dataAccessor, CollectorSignal collectorSignal
         {
             _logger = loggerFactory.CreateLogger<CollectorStarter>();
 
@@ -46,6 +47,11 @@ namespace MCollector.Core
             foreach (var tranformer in transformers)
             {
                 _transforms[tranformer.Name] = tranformer;
+            }
+
+            foreach (var preparer in preparers)
+            {
+                _preparers[preparer.Name] = preparer;
             }
 
             _dataPool = serviceProvider.GetRequiredService<DefaultCollectedDataPool>();
@@ -101,7 +107,7 @@ namespace MCollector.Core
             public TargetRunnerInfo(CollectorStarter starter, DefaultCollectedDataPool dataPool, CollectTarget target)
             {
                 _cts = new CancellationTokenSource();
-                Target = target;
+                Target = target;//todo 复制一个target，因为prepare可能会修改，但也要考虑是否有引用比较
                 _starter = starter;
                 _dataPool = dataPool;
                 _starter.CancellationToken.Register(() => _cts.Cancel());
@@ -177,11 +183,16 @@ namespace MCollector.Core
                     {
                         stopwatch.Start();
 
+                        //prepaire
+                        Prepare(info.Target, info.Target.Prepare);
+
+                        //collect
                         var data = await _collectors[info.Target.Type].Collect(info.Target);
                         data.Duration = stopwatch.ElapsedMilliseconds;
                         data.LastCollectTime = DateTime.Now;
                         items = new [] { data };
 
+                        //transform
                         items = await Transform(items, info.Target.Transform);
                     }
                     catch(Exception ex) 
@@ -213,6 +224,22 @@ namespace MCollector.Core
             {
                 _logger.LogWarning($"不存在{info.Target.Type}的执行器");
             }
+        }
+
+        private void Prepare(CollectTarget target, Dictionary<string, Dictionary<string, object>> preparers)
+        {
+            if(preparers?.Any() == true)
+            {
+                foreach(var prepare in  preparers)
+                {
+                    if (_preparers.ContainsKey(prepare.Key))
+                    {
+                        _preparers[prepare.Key].Process(target, prepare.Value);
+                    }
+                }
+            }
+
+            //if()
         }
 
         private async Task<IEnumerable<CollectedData>> Transform(IEnumerable<CollectedData> items, Dictionary<string, Dictionary<string, object>> transformers)

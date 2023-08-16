@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MCollector.Core.Contracts
 {
-    public interface ICollector
+    public interface ICollector: IAsSingleton
     {
         public string Type { get; }
 

@@ -9,7 +9,7 @@ namespace MCollector.Core.Transformers
 
         public virtual Task<IEnumerable<CollectedData>> Run(IEnumerable<CollectedData> items, Dictionary<string, object> args)
         {
-            var typedArgs = ConvertArgs(args);
+            var typedArgs = SerializerHelper.CreateFrom<T>(args);
 
             var results = new List<CollectedData>();
             foreach (var item in items)
@@ -36,16 +36,6 @@ namespace MCollector.Core.Transformers
         /// <returns>返回是否转换成功，如果失败则会将传入的item原样返回</returns>
         public abstract bool Transform(CollectedData rawData, T args, out IEnumerable<CollectedData> results);
 
-        private T? ConvertArgs(Dictionary<string, object> args)
-        {
-            args ??= new Dictionary<string, object>();
-            if (typeof(Dictionary<string, object>) == typeof(T))
-            {
-                return (T)(object)args;
-            }
-
-            return SerializerHelper.Deserialize<T>(args);
-        }
     }
 
     public abstract class TransformerBase : TransformerBase<Dictionary<string, object>>

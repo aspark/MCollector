@@ -3,3 +3,5 @@ bin
 .vs
 .config
 Properties
+*.loc.yml
+*.cache

@@ -10,7 +10,13 @@ targets:
   - name: curl local
     target: "http://127.0.0.1"
     type: url
+    args: null
     interval: 3
+    prepare: 
+      oauth20: 
+        address: xxx
+        clientId: xxx
+        clientSecret: xxx
   - name: curl baidu
     target: "http://baidu.com"
     type: url
@@ -48,7 +54,6 @@ targets:
       Content-Type: application/json
     contents:
       - "{test:1}"
-    prepare: null
   - name: ping local
     target: 127.0.0.1
     type: ping
@@ -79,3 +84,8 @@ targets:
     transform:
       targets:
         rootPath: data
+refs:
+  oauth: 
+    address: xxx
+    clientId: xxx
+    clientSecret: xxx

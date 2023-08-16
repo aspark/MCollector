@@ -12,7 +12,19 @@ namespace MCollector.Core.Common
     {
         public static T Deserialize<T>(Dictionary<string, object> values) where T : class, new()
         {
-            return Deserialize<T>(new Serializer().Serialize(values));
+            if(values?.Count > 0)
+            {
+                var convertValues = values.ToDictionary(p => p.Key, p => {
+                    if (p.Value?.GetType().IsAssignableTo(typeof(JsonElement)) == true)//jsonElement需要toString避免多层属性
+                        return p.Value.ToString();
+
+                    return p.Value;
+                });
+
+                return Deserialize<T>(new Serializer().Serialize(convertValues));//没有使用内置的json的原因是：无法将string转为int
+            }
+
+            return default;
         }
 
         public static string ToPlainString(object obj)
@@ -54,6 +66,18 @@ namespace MCollector.Core.Common
 
             return obj;
         }
+
+        public static T? CreateFrom<T>(Dictionary<string, object> values) where T : class, new()
+        {
+            values ??= new Dictionary<string, object>();
+            if (typeof(Dictionary<string, object>) == typeof(T))
+            {
+                return (T)(object)values;
+            }
+
+            return SerializerHelper.Deserialize<T>(values);
+        }
+
 
         public static JsonElement GetElement(JsonElement element, string path)
         {

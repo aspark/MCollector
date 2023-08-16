@@ -15,6 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="collector.loc.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="collector.yml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -32,5 +35,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MCollector.Core\MCollector.Core.csproj" />
+    <ProjectReference Include="..\MCollector.Plugins.AgileConfig\MCollector.Plugins.AgileConfig.csproj" />
+    <ProjectReference Include="..\MCollector.Plugins.ES\MCollector.Plugins.ES.csproj" />
+    <ProjectReference Include="..\MCollector.Plugins.OAuth\MCollector.Plugins.OAuth.csproj" />
+    <ProjectReference Include="..\MCollector.Plugins.Prometheus\MCollector.Plugins.Prometheus.csproj" />
   </ItemGroup>
 </Project>

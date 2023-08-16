@@ -19,30 +19,37 @@ var options = new WebApplicationOptions
     ContentRootPath = WindowsServiceHelpers.IsWindowsService() ? AppContext.BaseDirectory : default
 };
 
-var builder = WebApplication.CreateBuilder(options); 
+var builder = WebApplication.CreateBuilder(options);
 
-builder.Services.AddLogging(cfg => cfg.AddConsole());
+builder.Services.AddLogging(cfg => cfg.AddConsole().SetMinimumLevel(LogLevel.Warning));
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(cfg =>
 {
-    var assemblies = new List<Assembly>() { Assembly.GetEntryAssembly()!, typeof(CollectorStarter).Assembly };
+    var assemblies = new List<Assembly>() {
+        Assembly.GetEntryAssembly()!,
+        typeof(CollectorStarter).Assembly,
+        typeof(MCollector.Plugins.Prometheus.PrometheusExporter).Assembly,
+        typeof(MCollector.Plugins.OAuth.OAuth20Preparer).Assembly,
+        typeof(MCollector.Plugins.ES.ESIndicesCollector).Assembly,
+        typeof(MCollector.Plugins.AgileConfig.AgileConfigCollector).Assembly,
+    };
 
     //加载插件
     var dirPlugins = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
     if (Directory.Exists(dirPlugins))
     {
-        //var loaded = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => Path.GetFileName(a.Location)));
+        var loaded = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => a.FullName!));
         foreach (var file in Directory.GetFiles(dirPlugins, "*.dll", SearchOption.AllDirectories))
         {
-            var name = AssemblyName.GetAssemblyName(file);
-            var fileName = Path.GetFileName(file);
-            //if (!loaded.Contains(fileName))
+            var name = AssemblyName.GetAssemblyName(file).FullName;
+            //var fileName = Path.GetFileName(file);
+            if (!loaded.Contains(name))
             {
                 var asm = Assembly.LoadFrom(file);
-                if (fileName.StartsWith("MCollector", StringComparison.InvariantCultureIgnoreCase)) //只resolve MCollector的类
+                if (name.StartsWith("MCollector", StringComparison.InvariantCultureIgnoreCase)) //只resolve MCollector的类
                     assemblies.Add(asm);
 
-                //loaded.Add(fileName);
+                loaded.Add(name);
             }
         }
     }
@@ -61,8 +68,7 @@ builder.Host.UseWindowsService();
 //builder.Services.Configure<CollectorConfig>(builder.Configuration);
 
 //暂时手动load
-var config = ConfigParser.GetConfig();
-builder.Services.AddSingleton<IOptions<CollectorConfig>>(Options.Create(config));
+builder.Services.AddSingleton<IOptions<CollectorConfig>>(sp => Options.Create(sp.GetRequiredService<IConfigParser>().Get()));
 
 builder.Services.AddHttpClient("default").ConfigurePrimaryHttpMessageHandler(()=> {
     return new HttpClientHandler()
@@ -80,5 +86,5 @@ var app = builder.Build();
 app.MapControllers();
 
 
-app.Run("http://0.0.0.0:" + config.Port);//host.Configuration["port"]
+app.Run("http://0.0.0.0:" + app.Services.GetRequiredService<IOptions<CollectorConfig>>().Value.Port);//host.Configuration["port"]
 

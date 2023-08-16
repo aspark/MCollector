@@ -25,6 +25,12 @@ namespace MCollector.Core.Config
         /// </summary>
         public CollectTarget[] Targets { get; set; }
 
+        //todo: 好像???
+        ///// <summary>
+        ///// 引用的公共配置，主要用于prepare/tranform等使用
+        ///// </summary>
+        //public CollectorRefConfig Refs { get; set; } = new CollectorRefConfig();
+
         //public T ConvertTo<T>(Dictionary<string, object> parameters) where T : class, new()
         //{
         //    var config = SerializerHelper.Deserialize<T>(parameters);
@@ -36,8 +42,17 @@ namespace MCollector.Core.Config
 
     public class CollectorApiConfig
     {
-        public bool Status { get; set; }= true;
+        public bool Status { get; set; } = true;
+
+        public bool StatusContainsSuccessDetails { get; set; } = false;
 
         public bool Refresh { get; set;} = true;
+    }
+
+    public class CollectorRefConfig: Dictionary<string, Dictionary<string , object>>
+    {
+        //public string Name { get; set; }
+
+        //public Dictionary<string, object> Data { get; set; }
     }
 }

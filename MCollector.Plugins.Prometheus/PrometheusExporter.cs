@@ -9,7 +9,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MCollector.Plugins.Prometheus
 {
-    internal class PrometheusExporter : IExporter, IDisposable, IAsSingleton, IObserver<CollectedData>
+    public class PrometheusExporter : IExporter, IDisposable, IAsSingleton, IObserver<CollectedData>
     {
         private CollectorConfig _config = null;
         private ICollectedDataPool _resultAccessor = null;
