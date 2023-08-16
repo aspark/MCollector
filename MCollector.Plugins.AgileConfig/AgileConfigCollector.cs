@@ -51,7 +51,7 @@ namespace MCollector.Plugins.AgileConfig
                     {
                         JToken token = Regex.IsMatch(_configClient.Data.First().Key, @"^\d") ? new JArray() : new JObject();//{[targets:0:name, from agile]} agile无法将数组配置到根
 
-                        foreach (var pair in _configClient.Data)
+                        foreach (var pair in _configClient.Data.OrderBy(p=>p.Key))
                         {
                             Add(token, pair.Key, pair.Value);
                         }
