@@ -34,9 +34,14 @@ Prepare(可多个串联)->Collect(Target)->Transfrom(可多个串联)->Export(�
 > 需在配置文件`api`中启用
 
 
-1. `http://[ip:port]/status` 查看所有采集结果
+1. GET `http://[ip:port]/status` 查看所有采集结果
 
-2. `http://[ip:port]/refresh` 触发重新采集
+2. GET `http://[ip:port]/refresh` 触发重新采集
+
+3. GET `http://[ip:port]/encrypt?content=xxx` 获取xxx的密文。不提供解密接口，该密文是在oauth, es, k8等配置项中使用，**配置中任何以`@???:`开始的字符都会尝试解密使用**
+
+
+> 因为需要将生成的密钥保存到本本，所以在docker容器内需要挂载一个目录到应用程目录下:`/app/keys/`，如：`docker run -d -v /temp-keys:/app/keys container-name`
 
 ## 配置
 默认配置文件为`collector.yml`，系统也会合并`collector.*.yml`中的targets/exporter配置项，示例如下：
@@ -170,7 +175,7 @@ es索引状态收集，**固定搭配transform:json使用**
     interval: 3
     args: # agileConfig配置，可参考 https://github.com/dotnetcore/AgileConfig
       appId: app
-      secret: xxx
+      secret:  $???:CfDJ8FRn_zEEoYuD9OE-Hm-j1CxsZbON # Get from /encrypt?content=secret
       env: DEV
       ...
     transform:

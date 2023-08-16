@@ -127,7 +127,7 @@ namespace MCollector.Core.Contracts
         /// <summary>
         /// 发送的头信息
         /// </summary>
-        public Dictionary<string, string> Headers { get; set; }
+        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// 发送的内容，
@@ -139,12 +139,12 @@ namespace MCollector.Core.Contracts
         /// </summary>
         internal string Trace { get; set; } = Guid.NewGuid().ToString("n");
 
-        public Dictionary<string, Dictionary<string, object>> Prepare { get; set; }
+        public Dictionary<string, Dictionary<string, object>> Prepare { get; set; } = new Dictionary<string, Dictionary<string, object>>();
 
         /// <summary>
         /// 对返回内容的转换器
         /// </summary>
-        public Dictionary<string, Dictionary<string, object>> Transform { get; set; }
+        public Dictionary<string, Dictionary<string, object>> Transform { get; set; } = new Dictionary<string, Dictionary<string, object>>();
 
         public string GetVersion()
         {

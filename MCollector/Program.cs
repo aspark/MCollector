@@ -6,6 +6,9 @@ using Autofac.Extensions.DependencyInjection;
 using MCollector.Core;
 using MCollector.Core.Config;
 using MCollector.Core.Contracts;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Options;
 using System.Linq;
@@ -23,6 +26,13 @@ var builder = WebApplication.CreateBuilder(options);
 
 builder.Services.AddLogging(cfg => cfg.AddConsole().SetMinimumLevel(LogLevel.Warning));
 
+builder.Services.AddDataProtection(cfg=>cfg.ApplicationDiscriminator = "mcollector")
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "keys")))
+    .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
+    {
+        EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+        ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+    });
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(cfg =>
 {
     var assemblies = new List<Assembly>() {
@@ -32,6 +42,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(cfg =>
         typeof(MCollector.Plugins.OAuth.OAuth20Preparer).Assembly,
         typeof(MCollector.Plugins.ES.ESIndicesCollector).Assembly,
         typeof(MCollector.Plugins.AgileConfig.AgileConfigCollector).Assembly,
+        typeof(MCollector.Plugins.K8s.K8sContainerCollector).Assembly,
     };
 
     //加载插件

@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using MCollector.Core.Contracts;
 using MCollector.Core.Config;
+using Microsoft.AspNetCore.DataProtection;
+using MCollector.Core.Common;
 
 namespace MCollector.Controllers
 {
@@ -16,9 +18,12 @@ namespace MCollector.Controllers
         ICollectedDataPool _dataPool;
         ICollectorSignal _collectorSignal;
         CollectorConfig _config;
+        IProtector _protector;
 
-        public CollectorController(ICollectedDataPool dataPool, ICollectorSignal collectorSignal, IServiceProvider serviceProvider)
+
+        public CollectorController(ICollectedDataPool dataPool, ICollectorSignal collectorSignal, IServiceProvider serviceProvider, IProtector protector)
         {
+            _protector = protector;
             _dataPool = dataPool;
             _collectorSignal = collectorSignal;
             _config = serviceProvider.GetRequiredService<IOptions<CollectorConfig>>().Value;
@@ -31,7 +36,8 @@ namespace MCollector.Controllers
         }
 
         [Route("/status")]
-        public IActionResult Status()
+        [HttpGet]
+        public IActionResult Status(IDataProtectionProvider provider)
         {
             if(_config.Api?.Status == true)
             {
@@ -63,6 +69,16 @@ namespace MCollector.Controllers
             }
 
             return NotFound(null);
+        }
+
+        [Route("/encrypt")]
+        [Produces("text/plain")]
+        [HttpGet]
+        public IActionResult Encrypt(string content)
+        {
+            var txt = _protector.Protect(content);
+
+            return Ok(txt);
         }
     }
 }

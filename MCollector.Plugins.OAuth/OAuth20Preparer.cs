@@ -28,7 +28,12 @@ namespace MCollector.Plugins.OAuth
             var res = await client.RequestClientCredentialsTokenAsync(request);
 
             if(res.IsError == false)
+            {
+                if (target.Headers == null)
+                    target.Headers = new Dictionary<string, string>();
+
                 target.Headers["Authorization"] = "Bearer " + res.AccessToken;
+            }
             else
             {
                 Console.WriteLine(res.Error);

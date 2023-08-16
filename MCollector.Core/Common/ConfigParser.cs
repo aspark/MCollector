@@ -12,6 +12,12 @@ namespace MCollector.Core
     internal class ConfigParser: IConfigParser
     {
         //private Lazy<CollectorConfig> _config = new Lazy<CollectorConfig>(() => Get());
+        IProtector _protector;
+
+        public ConfigParser(IProtector protector)
+        {
+            _protector = protector;
+        }
 
         public CollectorConfig Get()
         {
@@ -50,7 +56,11 @@ namespace MCollector.Core
 
             try
             {
-                var config = SerializerHelper.Deserialize<CollectorConfig>(File.ReadAllText(file));
+                var content = File.ReadAllText(file);
+                //解密
+                content = _protector.FindAndUnprotectText(content);
+
+                var config = SerializerHelper.Deserialize<CollectorConfig>(content);
 
                 return config;
             }

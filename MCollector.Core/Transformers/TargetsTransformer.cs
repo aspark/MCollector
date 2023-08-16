@@ -15,13 +15,15 @@ namespace MCollector.Core.Transformers
 {
     internal class TargetsTransformer : TransformerBase<TargetsTransformerArgs>, ITransformer
     {
-        ICollectTargetManager _targetManager = null;
+        ICollectTargetManager _targetManager;
+        IProtector _protector;
 
         public override string Name => "targets";
 
-        public TargetsTransformer(ICollectTargetManager targetManager)//todo inject config
+        public TargetsTransformer(ICollectTargetManager targetManager, IProtector protector)//todo inject config
         {
             _targetManager = targetManager;
+            _protector = protector;
         }
 
         public override bool Transform(CollectedData rawData, TargetsTransformerArgs args, out IEnumerable<CollectedData> results)
@@ -54,7 +56,10 @@ namespace MCollector.Core.Transformers
         {
             if (!string.IsNullOrWhiteSpace(content))
             {
-                if(content.StartsWith("{") || content.StartsWith("["))//json格式
+                //解密，找特征内容
+                content = _protector.FindAndUnprotectText(content);
+
+                if (content.StartsWith("{") || content.StartsWith("["))//json格式
                 {
                     var json = JsonSerializer.Deserialize<JsonElement>(content);
 
@@ -85,6 +90,8 @@ namespace MCollector.Core.Transformers
     internal class TargetsTransformerArgs
     {
         public string RootPath { get; set; } = string.Empty;
+
+        public bool Decrpty { get; set; } = true;
     }
 
 }
