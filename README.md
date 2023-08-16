@@ -374,7 +374,8 @@ MetricsCollector会自动加载Plugins目录下的所有dll，如可实现`IColl
 获取所有已采集到的数据，实现了IObservable，也可使用订阅模式
 
 ## 示例
-* 生产最简单的配置，使用agile提供targets配置
+### 生产最简单的配置
+使用agile提供targets配置
 ``` yaml
 port: 18086
 exporter:
@@ -395,7 +396,7 @@ targets:
         rootPath: targets
 ```
 
-* 使用OAuth2.0 AccessToken请求接口
+### 使用OAuth2.0 AccessToken请求接口
 ``` yaml
 targets:
   - name: oauth
@@ -409,7 +410,7 @@ targets:
         clientSecret: xxx
 ```
 
-* 采集es索引健康度信息
+### 采集es索引健康度信息，将green等文本按字典转为数字
 ``` yaml
 targets:
   - name: es indices
@@ -426,4 +427,103 @@ targets:
           green: 1
           yellow: 0.5
           red: 0
+```
+
+### 每5秒从指定url获取内容，并将内容转为target添加到配置中
+``` yaml
+targets:
+  - name: merge config
+    target: http://localhost/collector.yml.txt
+    type: url
+    interval: 5000ms
+    transform:
+      targets:
+        rootPath: data
+```
+
+
+### 间隔在10秒到20秒间，从指定url获取内容，并检查内容转中是否存在指定文字
+``` yaml
+targets:
+  - name: curl baidu
+    target: "http://baidu.com"
+    type: url
+    interval: rand(10s,20s)
+    transform:
+      search:
+        text: "百度"
+```
+
+### 将采集的json对象转换为指标CollectedData
+
+返回的json如下
+``` json
+{
+  "status": "Healthy",
+  "results": {
+    "Node1": {
+      "status": "Healthy",
+      "description": null,
+      "data": {}
+    },
+    "Node2": {
+      "status": "Unhealthy",
+      "description": null,
+      "data": {}
+    },
+  }
+}
+```
+需转换为
+``` json
+[
+  {"Name":"Node1", "Content":"1", "IsSuccess":true},
+  {"Name":"Node2", "Content":"0", "IsSuccess":true},
+]
+```
+
+tranfrom配置如下：
+``` yaml
+targets:
+  - name: ...
+    target: ...
+    type: ...
+    transform:
+      json: 
+        rootPath: results
+        extractNameFromProperty: true
+        extractContentFrom: status
+        contentMapper:
+          Healthy: 1
+          Unhealthy: 0
+          Degraded: 0
+```
+
+### 将采集的json数组转换为指标CollectedData
+
+``` json
+[
+{"Name":"Node1", "Value":"1"},
+{"Name":"Node1", "Value":"1"},
+]
+```
+需转换为
+``` json
+[
+  {"Name":"Node1", "Content":"1", "IsSuccess":true},
+  {"Name":"Node2", "Content":"0", "IsSuccess":true},
+]
+```
+
+tranfrom配置如下：
+``` yaml
+targets:
+  - name: ...
+    target: ...
+    type: ...
+    transform:
+      json: 
+        rootPath: results
+        extractNameFrom: name
+        extractContentFrom: value
 ```
