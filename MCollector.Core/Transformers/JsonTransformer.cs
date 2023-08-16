@@ -117,7 +117,7 @@ namespace MCollector.Core.Transformers
 
         private string MapContent(JsonElement element, Dictionary<string, string> mapper)
         {
-            var content = element.GetString() ?? "";
+            var content = element.GetRawText() ?? "";
 
             if (!string.IsNullOrEmpty(content) && mapper?.ContainsKey(content) == true)
             {
