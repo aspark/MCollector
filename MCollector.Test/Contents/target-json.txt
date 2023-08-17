@@ -1,0 +1,34 @@
+﻿{
+  "targets": [
+    {
+      "interval": "3s",
+      "name": "localhost healthz",
+      "target": "http://localhost/healthz",
+      "transform": {
+        "json": {
+          "extractContentFrom": "status",
+          "extractNameFromProperty": "true",
+          "mapper": {
+            "Degraded": "0",
+            "Healthy": "1",
+            "Unhealthy": "0"
+          },
+          "rootPath": "results"
+        }
+      },
+      "type": "url"
+    },
+    {
+      "interval": "3s",
+      "name": "localhost metrics",
+      "target": "http://localhost/metrics",
+      "transform": {
+        "json": {
+          "extractContentFrom": "Value",
+          "extractNameFrom": "Name"
+        }
+      },
+      "type": "url"
+    }
+  ]
+}

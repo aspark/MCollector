@@ -1,0 +1,24 @@
+﻿targets:
+  - name: oauth
+    target: "http://127.0.0.1/api"
+    type: url
+    interval: 3
+    prepare: 
+      oauth20: 
+        address: https://127.0.0.1/connect/token
+        clientId: test
+        clientSecret: test
+  - name: es indices
+    target: "https://127.0.0.1:9200"
+    type: es.i
+    args:
+      username: test
+      password: test
+    interval: 3
+    transform:
+      json:
+        extractNameFromProperty: true
+        contentMapper:
+          green: 1
+          yellow: 0.5
+          red: 0

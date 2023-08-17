@@ -1,0 +1,20 @@
+﻿{
+    "status": "Healthy",
+    "results": {
+        "DB1": {
+            "status": "Healthy",
+            "description": null,
+            "data": {}
+        },
+        "DB1": {
+            "status": "Healthy",
+            "description": null,
+            "data": {}
+        },
+        "DB2": {
+            "status": "Healthy",
+            "description": null,
+            "data": {}
+        }
+    }
+}
