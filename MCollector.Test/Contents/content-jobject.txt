@@ -2,12 +2,12 @@
     "status": "Healthy",
     "results": {
         "DB1": {
-            "status": "Healthy",
+            "status": "Degraded",
             "description": null,
             "data": {}
         },
         "DB1": {
-            "status": "Healthy",
+            "status": "Unhealthy",
             "description": null,
             "data": {}
         },

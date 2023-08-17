@@ -34,4 +34,19 @@
     <ProjectReference Include="..\MCollector.Plugins.TencentCloud\MCollector.Plugins.TencentCloud.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Contents\content-jarray.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Contents\content-jobject.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Contents\target-json.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Contents\target-yml.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

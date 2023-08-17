@@ -6,7 +6,7 @@ namespace MCollector.Test
     public class JsonTransformTest
     {
         [Fact]
-        public void Test1()
+        public void TestJsonObjectTransform()
         {
             var transform = new JsonTransformer();
 
@@ -14,8 +14,8 @@ namespace MCollector.Test
                 Name = "test"
             };
 
-            var data = new CollectedData(target.Name, target) { 
-                Content = "{\r\n    \"status\": \"Healthy\",\r\n    \"results\": {\r\n        \"DB1\": {\r\n            \"status\": \"Degraded\",\r\n            \"description\": null,\r\n            \"data\": {}\r\n        },\r\n        \"DB1\": {\r\n            \"status\": \"Healthy\",\r\n            \"description\": null,\r\n            \"data\": {}\r\n        },\r\n        \"DB2\": {\r\n            \"status\": \"Unhealthy\",\r\n            \"description\": null,\r\n            \"data\": {}\r\n        }\r\n    }\r\n}"
+            var data = new CollectedData(target.Name, target) {
+                Content = File.ReadAllText("contents/content-jobject.txt")
             };
 
             //var items = new[] { target };
@@ -44,7 +44,7 @@ namespace MCollector.Test
 
 
         [Fact]
-        public void Test2()
+        public void TestJsonArrayTransform()
         {
             var transform = new JsonTransformer();
 
@@ -55,7 +55,7 @@ namespace MCollector.Test
 
             var data = new CollectedData(target.Name, target)
             {
-                Content = "[\r\n    {\r\n        \"Name\": \"D1\",\r\n        \"Value\": 4\r\n    },\r\n    {\r\n        \"Name\": \"D2\",\r\n        \"Value\": 0\r\n    },\r\n    {\r\n        \"Name\": \"D3\",\r\n        \"Value\": 1\r\n    },\r\n    {\r\n        \"Name\": \"D4\",\r\n        \"Value\": 0.9999960294117127674705882353\r\n    },\r\n    {\r\n        \"Name\": \"D5\",\r\n        \"Value\": 0.9999999999999549975308641975\r\n    },\r\n    {\r\n        \"Name\": \"D6\",\r\n        \"Value\": 1.0000000000000025066892682927\r\n    },\r\n    {\r\n        \"Name\": \"D7\",\r\n        \"Value\": 1.0000000000\r\n    }\r\n]"
+                Content = File.ReadAllText("contents/content-jarray.txt")
             };
 
             //var items = new[] { target };
