@@ -25,11 +25,10 @@ namespace MCollector.Core.Config
         /// </summary>
         public CollectTarget[] Targets { get; set; }
 
-        //todo: 好像???
-        ///// <summary>
-        ///// 引用的公共配置，主要用于prepare/tranform等使用
-        ///// </summary>
-        //public CollectorRefConfig Refs { get; set; } = new CollectorRefConfig();
+        /// <summary>
+        /// 引用的公共配置，主要用于prepare/tranform等使用
+        /// </summary>
+        public CollectorRefConfig Refs { get; set; } = new CollectorRefConfig();
 
         //public T ConvertTo<T>(Dictionary<string, object> parameters) where T : class, new()
         //{

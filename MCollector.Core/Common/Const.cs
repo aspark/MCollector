@@ -9,5 +9,7 @@ namespace MCollector.Core.Common
     public class Const
     {
         public static readonly string EncrptedTextPrefix = "$???:";
+
+        public static readonly string DicRefKey = "$REF";
     }
 }

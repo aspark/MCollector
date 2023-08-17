@@ -16,39 +16,6 @@ namespace MCollector.Plugins.ES
         {
             var data = new CollectedData(target.Name, target);
 
-            var args = SerializerHelper.CreateFrom<ESCollectorArgs>(target.Args) ?? new ESCollectorArgs();
-
-            var settings = new ElasticsearchClientSettings(new Uri(target.Target));
-            settings.Authentication(new BasicAuthentication(args.Username, args.Password)).ServerCertificateValidationCallback((obj, x, c, e) => true);
-
-            var client = new ElasticsearchClient(settings);
-
-            var stat = await client.Indices.StatsAsync();
-            if(stat.IsValidResponse)
-            {
-                var dic = new Dictionary<string, HealthStatus>();
-
-                if (stat.Indices != null)
-                {
-                    foreach (var pair in stat.Indices)
-                    {
-                        dic["indices-" + pair.Key] = pair.Value.Health ?? HealthStatus.Yellow;
-                    }
-                }
-
-                dic["indices-" + args.IndicesSummaryName] = 
-                    dic.Values.Any(v => v == HealthStatus.Red) 
-                    ? HealthStatus.Red 
-                    : (dic.Values.Any(v => v == HealthStatus.Yellow) ? HealthStatus.Yellow : HealthStatus.Green);
-
-                data.Content = JsonSerializer.Serialize(dic);
-            }
-            else
-            {
-                data.IsSuccess = false;
-                data.Content = stat.ElasticsearchServerError?.ToString();
-            }
-
             //stat.All
 
             return data;
