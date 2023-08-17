@@ -84,7 +84,7 @@ namespace MCollector.Core.Transformers
                     if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array)
                     {
                         data.Content = MapElementValue(prop.Value, args.ExtractContentFrom, args.ContentMapper);
-                        data.Remark = MapElementValue(prop.Value, args.ExtractRemarkFrom);
+                        data.Remark = MapElementValue(prop.Value, args.ExtractRemarkFrom, allowMiss: true);
                     }
                     else
                     {
@@ -125,6 +125,14 @@ namespace MCollector.Core.Transformers
 
                         return true;
                     }
+                    else
+                    {
+                        Console.WriteLine($"查找不到ExtractContentFrom指定的属性:{args.ExtractContentFrom}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"查找不到ExtractNameFrom指定的属性:{args.ExtractNameFrom}");
                 }
             }
 
@@ -143,11 +151,23 @@ namespace MCollector.Core.Transformers
             return content;
         }
 
-        private string MapElementValue(JsonElement element, string path, Dictionary<string, string>? mapper = null)
+        private string MapElementValue(JsonElement element, string path, Dictionary<string, string>? mapper = null, bool allowMiss = false)
         {
             if (!string.IsNullOrWhiteSpace(path))
             {
-                element = SerializerHelper.GetElement(element, path);
+                if (allowMiss)
+                {
+                    if (SerializerHelper.TryGetElement(element, path, out var temp))
+                    {
+                        element = temp;
+                    }
+                    else
+                        return string.Empty;
+                }
+                else
+                {
+                    element = SerializerHelper.GetElement(element, path);
+                }
             }
 
             return MapElementValue(element, mapper);
@@ -167,6 +187,9 @@ namespace MCollector.Core.Transformers
 
         public string ExtractContentFrom { get; set; } = "content";
 
+        /// <summary>
+        /// 【可选】
+        /// </summary>
         public string ExtractRemarkFrom { get; set; } = "remark";
 
         public Dictionary<string, string> ContentMapper { get; set; }

@@ -7,7 +7,10 @@ using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+[assembly:InternalsVisibleTo("MCollector.Test")]
 
 namespace MCollector.Core
 {

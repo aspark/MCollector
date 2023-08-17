@@ -11,12 +11,12 @@ namespace MCollector.Plugins.Prometheus
 {
     public class PrometheusExporter : IExporter, IDisposable, IAsSingleton, IObserver<CollectedData>
     {
-        private CollectorConfig _config = null;
+        //private CollectorConfig _config = null;
         private ICollectedDataPool _resultAccessor = null;
 
-        public PrometheusExporter(IOptions<CollectorConfig> config, ICollectedDataPool resultAccessor)
+        public PrometheusExporter(ICollectedDataPool resultAccessor)//IOptions<CollectorConfig> config, 
         {
-            _config = config.Value;
+            //_config = config.Value;
             _resultAccessor = resultAccessor;
         }
 

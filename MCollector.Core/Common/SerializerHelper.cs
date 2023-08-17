@@ -78,6 +78,25 @@ namespace MCollector.Core.Common
             return SerializerHelper.Deserialize<T>(values);
         }
 
+        /// <summary>
+        /// 失败时result==element
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="path"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static bool TryGetElement(JsonElement element, string path, out JsonElement result)
+        {
+            result = element;
+            try
+            {
+                result = GetElement(element, path);
+                return true;
+            }
+            catch { }
+
+            return false;
+        }
 
         public static JsonElement GetElement(JsonElement element, string path)
         {

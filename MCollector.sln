@@ -23,7 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.AgileCon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.ES", "MCollector.Plugins.ES\MCollector.Plugins.ES.csproj", "{ED6D49FC-1769-4294-AD94-BE0C0F6C3449}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCollector.Plugins.K8s", "MCollector.Plugins.K8s\MCollector.Plugins.K8s.csproj", "{668B18AE-D056-4333-AA99-D9A788247B78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.K8s", "MCollector.Plugins.K8s\MCollector.Plugins.K8s.csproj", "{668B18AE-D056-4333-AA99-D9A788247B78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCollector.Test", "MCollector.Test\MCollector.Test.csproj", "{3D50BED7-EE2F-45B5-B385-6FEFDDC3804F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{668B18AE-D056-4333-AA99-D9A788247B78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{668B18AE-D056-4333-AA99-D9A788247B78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{668B18AE-D056-4333-AA99-D9A788247B78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D50BED7-EE2F-45B5-B385-6FEFDDC3804F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D50BED7-EE2F-45B5-B385-6FEFDDC3804F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D50BED7-EE2F-45B5-B385-6FEFDDC3804F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D50BED7-EE2F-45B5-B385-6FEFDDC3804F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
