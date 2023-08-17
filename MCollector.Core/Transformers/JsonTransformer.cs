@@ -16,9 +16,6 @@ namespace MCollector.Core.Transformers
         public override string Name => "json";
 
 
-        //private const string _keyName = "extractNameFrom";
-        //private const string _keyContent = "extractContentFrom";
-
         public override bool Transform(CollectedData rawData, JsonTransformerArgs args, out IEnumerable<CollectedData> results)
         {
             var list = new List<CollectedData>();
@@ -73,6 +70,11 @@ namespace MCollector.Core.Transformers
 
             if (args.ExtractNameFromProperty)
             {
+                if (element.ValueKind != JsonValueKind.Object)
+                {
+                    throw new Exception("ExtractNameFromProperty不支持数组类型");
+                }
+
                 foreach (var prop in element.EnumerateObject())
                 {
                     CollectedData data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
@@ -81,11 +83,13 @@ namespace MCollector.Core.Transformers
                     data.Name += (">" + prop.Name);
                     if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array)
                     {
-                        data.Content = MapContent(prop.Value, args.ExtractContentFrom, args.ContentMapper);
+                        data.Content = MapElementValue(prop.Value, args.ExtractContentFrom, args.ContentMapper);
+                        data.Remark = MapElementValue(prop.Value, args.ExtractRemarkFrom);
                     }
                     else
                     {
-                        data.Content = MapContent(prop.Value, args.ContentMapper);
+                        data.Content = MapElementValue(prop.Value, args.ContentMapper);
+                        //data.Remark = MapElementValue(prop.Value);
                     }
 
                     items.Add(data);
@@ -95,6 +99,11 @@ namespace MCollector.Core.Transformers
             }
             else
             {
+                if(string.IsNullOrWhiteSpace(args.ExtractNameFrom))
+                {
+                    throw new Exception("ExtractNameFrom不可为空");
+                }
+
                 if (element.TryGetProperty(args.ExtractNameFrom, out JsonElement elName))
                 {
                     CollectedData data = new CollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
@@ -103,7 +112,14 @@ namespace MCollector.Core.Transformers
                     data.LastCollectTime = DateTime.Now;
                     if (element.TryGetProperty(args.ExtractContentFrom, out JsonElement elContent))
                     {
-                        data.Content = MapContent(elContent, args.ContentMapper);
+                        //content
+                        data.Content = MapElementValue(elContent, args.ContentMapper);
+
+                        //remark 可选
+                        if (element.TryGetProperty(args.ExtractRemarkFrom, out JsonElement elRemark))
+                        {
+                            data.Remark = MapElementValue(elRemark);
+                        }
 
                         items.Add(data);
 
@@ -115,9 +131,9 @@ namespace MCollector.Core.Transformers
             return false;
         }
 
-        private string MapContent(JsonElement element, Dictionary<string, string> mapper)
+        private string MapElementValue(JsonElement element, Dictionary<string, string>? mapper = null)
         {
-            var content = element.GetRawText() ?? "";
+            var content = (element.GetRawText() ?? "").Trim('"');
 
             if (!string.IsNullOrEmpty(content) && mapper?.ContainsKey(content) == true)
             {
@@ -127,14 +143,14 @@ namespace MCollector.Core.Transformers
             return content;
         }
 
-        private string MapContent(JsonElement element, string path, Dictionary<string, string> mapper)
+        private string MapElementValue(JsonElement element, string path, Dictionary<string, string>? mapper = null)
         {
             if (!string.IsNullOrWhiteSpace(path))
             {
                 element = SerializerHelper.GetElement(element, path);
             }
 
-            return MapContent(element, mapper);
+            return MapElementValue(element, mapper);
         }
     }
 
@@ -150,6 +166,8 @@ namespace MCollector.Core.Transformers
         public bool ExtractNameFromProperty { get; set; } = false;
 
         public string ExtractContentFrom { get; set; } = "content";
+
+        public string ExtractRemarkFrom { get; set; } = "remark";
 
         public Dictionary<string, string> ContentMapper { get; set; }
 

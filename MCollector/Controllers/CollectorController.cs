@@ -47,7 +47,8 @@ namespace MCollector.Controllers
                     IsSuccess = d.IsSuccess,
                     Msg = !d.IsSuccess || _config.Api?.StatusContainsSuccessDetails == true ? (d.Content ?? "") : "",
                     LastUpdateTime = d.LastCollectTime,
-                    Name = d.Name
+                    Name = d.Name,
+                    Remark = d.Remark
                 });//
 
                 return Ok(items);

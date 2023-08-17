@@ -28,9 +28,11 @@ namespace MCollector.Core.Contracts
 
         public string Name { get; set; }
 
+        /// <summary>
+        /// 目标
+        /// </summary>
         public CollectTarget Target { get; private set; }
 
-        //public HttpStatusCode Code { get; set; } = HttpStatusCode.OK;
         public bool IsSuccess { get; set; } = true;
 
         /// <summary>
@@ -39,12 +41,17 @@ namespace MCollector.Core.Contracts
         public Dictionary<string, object> Headers { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
-        /// 返回的内容
+        /// 采集的内容
         /// </summary>
         public string? Content { get; set; }//object
 
         /// <summary>
-        /// 耗时
+        /// 采集内容备注
+        /// </summary>
+        public string? Remark { get; set; }
+
+        /// <summary>
+        /// 采集耗时
         /// </summary>
         public long Duration { get; set; }
 

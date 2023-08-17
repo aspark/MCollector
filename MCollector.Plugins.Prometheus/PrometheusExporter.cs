@@ -52,7 +52,7 @@ namespace MCollector.Plugins.Prometheus
         ConcurrentDictionary<string, Gauge> _dicMetrixs = new ConcurrentDictionary<string, Gauge>();
         private void Update(CollectedData data)
         {
-            var gauge = _dicMetrixs.GetOrAdd(data.Name, k => Metrics.CreateGauge(NormalizeName(data.Name), data.Name));//名称可能非法
+            var gauge = _dicMetrixs.GetOrAdd(data.Name, k => Metrics.CreateGauge(NormalizeName(data.Name), data.Name, data.Remark?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? new string[0]));//名称可能非法
 
             //如果内容是数据，侧用数据上报
             if (data.IsSuccess && data.Content != null)

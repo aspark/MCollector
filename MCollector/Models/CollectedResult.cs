@@ -27,5 +27,7 @@ namespace MCollector.Models
 
 
         public DateTime LastUpdateTime { get; set; } = DateTime.Now;
+
+        public string? Remark { get; internal set; }
     }
 }

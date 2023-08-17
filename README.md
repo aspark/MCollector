@@ -50,7 +50,7 @@ Prepare(可多个串联)->Collect(Target)->Transfrom(可多个串联)->Export(�
 port: 18086 # 应用提供服务的端口
 api: 
   status: true # 【可选】是否启用status接口
-  statusContainsSuccessDetails # 【可选】是否在成功状态时也显示采集到的详情，默认false
+  statusContainsSuccessDetails: false # 【可选】是否在成功状态时也显示采集到的详情，默认false
   refresh: true # 【可选】是否启用刷新接口，若启用，则可以通用GET /refresh接口，立即重新检测所有目标
 exporter: # 检测结果导出，，如：prometheus、邮件通知等等
   prometheus: # prometheus的自定义配置
@@ -328,6 +328,7 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
 1. 如采集到的Content是数值，则转为double后上报
 1. 如采集到的Content是true/false，则转为1/0上报
 1. 其它情况以是否采集成为IsSuccess，转为1/0上报
+1. 会将采集到的Remark作为Label上报，如果Remark中有英文分号，则处理为多个label
 
 配置说明如下：
 ``` yaml
@@ -367,6 +368,7 @@ MetricsCollector会自动加载Plugins目录下的所有dll，如可实现`IColl
 | IsSuccess | bool | 采集是否成功，**不代表目标是否健康** |
 | Headers | string[] | 采集到的头信息 |
 | Content | string | 采集到的内容 |
+| Remark | string | 采集到的备注 |
 | Duration | long | 采集耗时，ms |
 | LastCollectTime | DateTime | 最后执行时间 |
 
@@ -437,8 +439,7 @@ targets:
     type: url
     interval: 5000ms
     transform:
-      targets:
-        rootPath: data
+      targets: null # 不需要做json解析
 ```
 
 
