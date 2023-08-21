@@ -6,7 +6,7 @@ namespace MCollector.Test
     public class JsonTransformTest
     {
         [Fact]
-        public void TestJsonObjectTransform()
+        public async Task TestJsonObjectTransform()
         {
             var transform = new JsonTransformer();
 
@@ -31,20 +31,20 @@ namespace MCollector.Test
                     {"Unhealthy", "0" },
                 }
             };
-            var result = transform.Transform(data, args, out var items);
+            var result = await transform.Transform(data, args);
 
-            result.ShouldBe(true);
-            items.Count().ShouldBe(4);
-            items.All(i => i.IsSuccess).ShouldBe(true);
-            items.Where(i => i.Content == "1").Count().ShouldBe(1);
-            items.Where(i => i.Content == "0").Count().ShouldBe(2);
+            result.IsSuccess.ShouldBe(true);
+            result.Items.Count().ShouldBe(4);
+            result.Items.All(i => i.IsSuccess).ShouldBe(true);
+            result.Items.Where(i => i.Content == "1").Count().ShouldBe(1);
+            result.Items.Where(i => i.Content == "0").Count().ShouldBe(2);
 
             
         }
 
 
         [Fact]
-        public void TestJsonArrayTransform()
+        public async Task TestJsonArrayTransform()
         {
             var transform = new JsonTransformer();
 
@@ -65,14 +65,14 @@ namespace MCollector.Test
                 ExtractContentFrom = "Value",
                 ExtractNameFrom = "Name"
             };
-            var result = transform.Transform(data, args, out var items);
+            var result = await transform.Transform(data, args);
 
-            result.ShouldBe(true);
-            items.Count().ShouldBe(7);
-            items.All(i => i.IsSuccess).ShouldBe(true);
-            items.Where(i => i.Content == "1").Count().ShouldBe(1);
-            items.Where(i => i.Content == "4").Count().ShouldBe(1);
-            items.Select(i => double.Parse(i.Content)).Count(i => i >= 1).ShouldBe(4);
+            result.IsSuccess.ShouldBe(true);
+            result.Items.Count().ShouldBe(7);
+            result.Items.All(i => i.IsSuccess).ShouldBe(true);
+            result.Items.Where(i => i.Content == "1").Count().ShouldBe(1);
+            result.Items.Where(i => i.Content == "4").Count().ShouldBe(1);
+            result.Items.Select(i => double.Parse(i.Content)).Count(i => i >= 1).ShouldBe(4);
         }
     }
 }

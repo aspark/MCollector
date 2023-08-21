@@ -21,11 +21,11 @@ namespace MCollector.Core
         Dictionary<string, ICollector> _collectors = new Dictionary<string, ICollector>(StringComparer.InvariantCultureIgnoreCase);
         Dictionary<string, IPreparer> _preparers = new Dictionary<string, IPreparer>(StringComparer.InvariantCultureIgnoreCase);
         Dictionary<string, ITransformer> _transforms = new Dictionary<string, ITransformer>(StringComparer.InvariantCultureIgnoreCase);
+        Dictionary<string, IExporter> _exporters = new Dictionary<string, IExporter>();
 
         ICollectTargetManager _targetManager;
         DefaultCollectedDataPool _dataPool;
         CollectorSignal _collectorSignal;
-        IList<IExporter> _exporters;
 
         CancellationTokenSource _tokenSource;
 
@@ -57,10 +57,13 @@ namespace MCollector.Core
                 _preparers[preparer.Name] = preparer;
             }
 
+            foreach (var exporter in exporters)
+            {
+                _exporters[exporter.Name] = exporter;
+            }
+
             _dataPool = serviceProvider.GetRequiredService<DefaultCollectedDataPool>();
             _collectorSignal = serviceProvider.GetRequiredService<CollectorSignal>();
-
-            _exporters = exporters;
         }
         public CancellationToken CancellationToken { get => _tokenSource.Token; }
 
@@ -71,7 +74,7 @@ namespace MCollector.Core
             _tokenSource?.Cancel();
             _collectorSignal.Continue();
 
-            foreach (var exporter in _exporters)
+            foreach (var exporter in _exporters.Values)
             {
                 exporter.Stop();
             }
@@ -94,9 +97,15 @@ namespace MCollector.Core
 
             _targetManager.AddChangedCallback(StartImpl);
 
-            foreach (var exporter in _exporters)
+            if (_config.Exporter?.Any() == true)
             {
-                exporter.Start(_config.Exporter.ContainsKey(exporter.Name) ? _config.Exporter[exporter.Name] : new Dictionary<string, object>());
+                foreach (var exporterConfig in _config.Exporter)
+                {
+                    if (_exporters.ContainsKey(exporterConfig.Key))
+                    {
+                        _exporters[exporterConfig.Key].Start(exporterConfig.Value ?? new Dictionary<string, object>());
+                    }
+                }
             }
         }
 
@@ -196,7 +205,7 @@ namespace MCollector.Core
                         items = new [] { data };
 
                         //transform
-                        items = await Transform(items, info.Target.Transform);
+                        items = await Transform(info.Target, items, info.Target.Transform);
                     }
                     catch(Exception ex) 
                     {
@@ -246,7 +255,7 @@ namespace MCollector.Core
             //if()
         }
 
-        private async Task<IEnumerable<CollectedData>> Transform(IEnumerable<CollectedData> items, Dictionary<string, Dictionary<string, object>> transformers)
+        private async Task<IEnumerable<CollectedData>> Transform(CollectTarget target, IEnumerable<CollectedData> items, Dictionary<string, Dictionary<string, object>> transformers)
         {
             if (transformers?.Any() == true)
             {
@@ -264,7 +273,7 @@ namespace MCollector.Core
 
                         if (_transforms.ContainsKey(trans.Key))
                         {
-                            changedItems.AddRange(await _transforms[trans.Key].Run(new[] { item } , trans.Value));
+                            changedItems.AddRange( await _transforms[trans.Key].Run(target, new[] { item } , trans.Value));
                         }
                     }
                 }

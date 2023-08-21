@@ -15,7 +15,7 @@ namespace MCollector.Test
     public class TargetsTransformTest
     {
         [Fact]
-        public void TestYmlTargets()
+        public async Task TestYmlTargets()
         {
             var targetManager = new DefaultCollectTargetManager(Options.Create(new CollectorConfig() { Targets = new CollectTarget[0] }));
             var mProtector = new Mock<IProtector>();
@@ -36,10 +36,10 @@ namespace MCollector.Test
                 Content = File.ReadAllText("contents/target-yml.txt")
             };
 
-            var result = transform.Transform(data, new TargetsTransformerArgs() { }, out var items);
+            var result = await transform.Transform(data, new TargetsTransformerArgs() { });
 
-            result.ShouldBe(true);
-            items.Count().ShouldBe(1);// add sucessful
+            result.IsSuccess.ShouldBe(true);
+            result.Items.Count().ShouldBe(1);// add sucessful
             targetManager.GetAll().Count.ShouldBe(2);
             targetManager.GetAll().Where(i => i.Name.Equals("oauth", StringComparison.InvariantCultureIgnoreCase)).Count().ShouldBe(1);
             targetManager.GetAll().First(i => i.Name.Equals("oauth", StringComparison.InvariantCultureIgnoreCase)).Prepare.Count().ShouldBe(1);
@@ -48,7 +48,7 @@ namespace MCollector.Test
         }
 
         [Fact]
-        public void TestJsonTargets()
+        public async Task TestJsonTargets()
         {
             var targetManager = new DefaultCollectTargetManager(Options.Create(new CollectorConfig() { Targets = new CollectTarget[0] }));
             var mProtector = new Mock<IProtector>();
@@ -69,12 +69,12 @@ namespace MCollector.Test
                 Content = File.ReadAllText("contents/target-json.txt")
             };
 
-            var result = transform.Transform(data, new TargetsTransformerArgs() {
+            var result = await transform.Transform(data, new TargetsTransformerArgs() {
                  RootPath = "targets"
-            }, out var items);
+            });
 
-            result.ShouldBe(true);
-            items.Count().ShouldBe(1);// add sucessful
+            result.IsSuccess.ShouldBe(true);
+            result.Items.Count().ShouldBe(1);// add sucessful
             targetManager.GetAll().Count.ShouldBe(2);
             targetManager.GetAll().Where(i => i.Name.Equals("localhost metrics", StringComparison.InvariantCultureIgnoreCase)).Count().ShouldBe(1);
             targetManager.GetAll().First(i => i.Name.Equals("localhost metrics", StringComparison.InvariantCultureIgnoreCase)).Transform.Count().ShouldBe(1);

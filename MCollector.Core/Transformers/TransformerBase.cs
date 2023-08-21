@@ -7,16 +7,17 @@ namespace MCollector.Core.Transformers
     {
         public abstract string Name { get; }
 
-        public virtual Task<IEnumerable<CollectedData>> Run(IEnumerable<CollectedData> items, Dictionary<string, object> args)
+        public virtual async Task<IEnumerable<CollectedData>> Run(CollectTarget target, IEnumerable<CollectedData> items, Dictionary<string, object> args)
         {
             var typedArgs = SerializerHelper.CreateFrom<T>(args);
 
             var results = new List<CollectedData>();
             foreach (var item in items)
             {
-                if (Transform(item, typedArgs, out IEnumerable<CollectedData> transformedItems))
+                var result = await Transform(item, typedArgs);
+                if (result?.IsSuccess == true)
                 {
-                    results.AddRange(transformedItems);
+                    results.AddRange(result.Items);
                 }
                 else
                 {//转换失败，原样返回
@@ -24,7 +25,7 @@ namespace MCollector.Core.Transformers
                 }
             }
 
-            return Task.FromResult(results.AsEnumerable());
+            return results.AsEnumerable();
         }
 
         /// <summary>
@@ -34,12 +35,40 @@ namespace MCollector.Core.Transformers
         /// <param name="args"></param>
         /// <param name="results"></param>
         /// <returns>返回是否转换成功，如果失败则会将传入的item原样返回</returns>
-        public abstract bool Transform(CollectedData rawData, T args, out IEnumerable<CollectedData> results);
+        public abstract Task<TransformResult> Transform(CollectedData rawData, T args);
 
     }
 
     public abstract class TransformerBase : TransformerBase<Dictionary<string, object>>
     {
 
+    }
+
+    public class TransformResult
+    {
+        public TransformResult()
+        {
+            
+        }
+
+        public TransformResult(bool isSuccess, IEnumerable<CollectedData> items)
+        {
+            IsSuccess = isSuccess;
+            Items = items;
+        }
+
+        public bool IsSuccess { get; set; } = false;
+
+        public IEnumerable<CollectedData> Items { get; set; }
+
+        public static TransformResult CreateFailed()
+        {
+            return new TransformResult(false, new CollectedData[0]);
+        }
+
+        public static TransformResult CreateSuccess(IEnumerable<CollectedData> items)
+        {
+            return new TransformResult(true, items);
+        }
     }
 }

@@ -1,15 +1,67 @@
-﻿# 接口指标采集
-通过curl、ping、telnet、cmd等多种方式采集目标数据，用于健康度检测
+﻿采集器
 
-## 概览
-采集过程由四个阶段组成：
+通过curl、ping、telnet、cmd等多种方式采集目标数据，可用于健康检测等拨测场景  
+
+
+- [设计](#设计)
+- [编译](#编译)
+- [运行](#运行)
+  - [单独执行](#单独执行)
+  - [容器方式](#容器方式)
+  - [windows服务方式](#windows服务方式)
+- [接口](#接口)
+- [配置](#配置)
+  - [target配置说明](#target配置说明)
+- [采集器(collect)](#采集器collect)
+  - [`type: url`](#type-url)
+  - [`type: ping`](#type-ping)
+  - [`type: telnet`](#type-telnet)
+  - [`type: cmd`](#type-cmd)
+  - [`type: file`](#type-file)
+  - [`type: sql`](#type-sql)
+  - [`type: es.q`](#type-esq)
+  - [`type: es.i`](#type-esi)
+  - [`type: agileConfig`](#type-agileconfig)
+  - [`type: tcloud`](#type-tcloud)
+  - [自定义采集方式](#自定义采集方式)
+- [预处理(prepare)](#预处理prepare)
+  - [`oauth20`](#oauth20)
+  - [自定义预处理](#自定义预处理)
+- [转换(transform)](#转换transform)
+  - [`json`](#json)
+  - [`search`](#search)
+  - [`count`](#count)
+  - [`targets`](#targets)
+  - [`es.q`](#esq)
+  - [自定义转换](#自定义转换)
+- [导出(export)](#导出export)
+  - [`prometheus`](#prometheus)
+  - [`es`(elasticsearch)](#eselasticsearch)
+  - [自定义导出](#自定义导出)
+- [插件](#插件)
+- [Dev说明](#dev说明)
+  - [`CollectedData`](#collecteddata)
+  - [`ICollectedDataPool`](#icollecteddatapool)
+- [示例](#示例)
+  - [生产最简单的配置](#生产最简单的配置)
+  - [使用OAuth2.0 AccessToken请求接口](#使用oauth20-accesstoken请求接口)
+  - [采集es索引健康度信息，将green等文本按字典转为数字](#采集es索引健康度信息将green等文本按字典转为数字)
+  - [每5秒从指定url获取内容，并将内容转为target添加到配置中](#每5秒从指定url获取内容并将内容转为target添加到配置中)
+  - [间隔在10秒到20秒间，从指定url获取内容，并检查内容转中是否存在指定文字](#间隔在10秒到20秒间从指定url获取内容并检查内容转中是否存在指定文字)
+  - [将采集的json对象转换为指标CollectedData](#将采集的json对象转换为指标collecteddata)
+  - [将采集的json数组转换为指标CollectedData](#将采集的json数组转换为指标collecteddata)
+
+
+## 设计
+MCollector采集过程由四个阶段组成：
 1. **Prepare**：在开始采集前的准备工作，如：添加OAuth头
 1. **Collect**：根据Target配置中指定的方式采集数据
 1. **Transform**：将采集到的数据转换为其它内容，如：抽取Json中的指定项、查询是否包含指定内容、将上一个采集数据转为Targets合并到配置中等等
 1. **Export**:监听采集到的所有结果并应用，如：上报Prometheus
 
+串联关系如下：
 
-Prepare(可多个串联)->Collect(Target)->Transfrom(可多个串联)->Export(多个并行)
+**Prepare**(可多个串联)->**Collect**(Target)->**Transfrom**(可多个串联)->**Export**(多个并行)
 
 
 ## 编译
@@ -29,6 +81,8 @@ Prepare(可多个串联)->Collect(Target)->Transfrom(可多个串联)->Export(�
 
 ### windows服务方式
 使用 `install.bat` 或 `uninstall.bat`脚本来安装或卸载windows服务
+
+> 已经内置了 prometheus oauth es sql agileConfig k8s等插件，这内个项止无需部署到Plugins目录中
 
 ## 接口
 > 需在配置文件`api`中启用
@@ -112,6 +166,7 @@ targets: # 检测目标集合（target）
       - "{test:1}"
 ```
 
+
 ### `type: ping`
 ``` yaml
   - name: name # 名称
@@ -119,6 +174,7 @@ targets: # 检测目标集合（target）
     type: ping
     interval: 3
 ```
+
 
 ### `type: telnet`
 ``` yaml
@@ -128,6 +184,7 @@ targets: # 检测目标集合（target）
     interval: 3
 ```
 > 暂未实现将Contents内容发送到服务端
+
 
 ### `type: cmd`
 在一个会话中逐条执行Contents中的命令行，~~任一语句执行失败则中止~~
@@ -143,6 +200,58 @@ targets: # 检测目标集合（target）
       - echo ok
 ```
 > 一般会配合transformer使用，如检测web服务是否支持tls1.2
+
+
+### `type: file`
+从收集本地文件中的内容
+``` yaml
+  - name: name # 名称
+    target: "" # 文件路径，如果是相对路径，是从当前程序所在目录开始
+    type: file
+    interval: 3
+```
+
+
+### `type: sql`
+使用sql从关系型数据库收集信息
+> 可以配合`targets` transform，从数据库读取配置并发起收集，如添加：Collector.UI项目可视化管理targets
+``` yaml
+  - name: name # 名称
+    target: "" # db地址
+    type: rdbms
+    args: 
+      type: mssql # 【可选】数据库类型：mssql/mysql/pgsql/sqlite，默认：mssql
+    interval: 3
+    contents: # sql语句，以最后一条sql的结果作为获取的内容，以json格式序列化为string
+      - select * from ... # sql
+```
+
+
+### `type: es.q`
+从es中查询结果并以json返回，content可以为以下两种格式：
+1. DSL Query String：如：`(new york city) OR (big apple)`,需添加默认索引配置(`target`) 参见：https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html 
+2. json格式：整个body序列化内容（可包含query/aggregation等），参见：https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html
+> 一般会配合 `json` transform 或 `count` transform使用
+``` yaml
+  - name: name # 名称
+    target: "" # es api 地址， 如：https://localhost:9200
+    type: es.i
+    interval: 3
+    contents: # es query语句，仅执行数组中最后一个query
+      - query string
+    args: # es 配置
+      username: xxx # es用户名
+      password: xxx # es密码
+      target: xxx # 默认索引 Path parameters
+      parameters: # Query parameters
+       xx: xx
+    transform:
+      json: 
+        extractNameFrom: pro1
+        extractContentFrom: ?? 
+```
+> parameters: The q parameter overrides the query parameter in the request body
+
 
 ### `type: es.i`
 es索引状态收集，**固定搭配transform:json使用**
@@ -165,6 +274,7 @@ es索引状态收集，**固定搭配transform:json使用**
           red: 0
 ```
 
+
 ### `type: agileConfig`
 从agileConfig获取配置信息，**这里只会获取，如果需要应用，请添加transform:targets配置**
 > json name: CamelCase名命方式
@@ -183,6 +293,7 @@ es索引状态收集，**固定搭配transform:json使用**
         rootPath: targets
 ```
 
+
 ### `type: tcloud`
 腾讯云TKE信息收集，**固定搭配transform:json使用**
 ``` yaml
@@ -198,6 +309,7 @@ es索引状态收集，**固定搭配transform:json使用**
       json:
         xxx:xxx
 ```
+
 
 ### 自定义采集方式
 需实现ICollector接口，如实现一个腾讯云的信息采集：
@@ -221,6 +333,7 @@ es索引状态收集，**固定搭配transform:json使用**
     interval: 30
 ```
 
+
 ## 预处理(prepare)
 ### `oauth20`
 使用OAuth2.0方式，为请求添加头信息 Authorization:AccessToken
@@ -232,6 +345,7 @@ es索引状态收集，**固定搭配transform:json使用**
         clientId: xxx # 分配的clientid
         clientSecret: xxx # 分配的秘钥
 ```
+
 
 ### 自定义预处理
 实现接口`IPreparer`或继承`PreparerBase<OAuthPreparerArgs>`，后续提供了强类型的参数，如：
@@ -275,6 +389,15 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
        text: xxxx # 需要搜索的字符串内容
 ```
 
+
+### `count`
+返回收集到的Data集合数量，如一个target收集到一个data后，再用`json`转换为数组后，可以用`count`取到数据长度
+```yaml
+    transform: 
+     count: null # 无参数
+```
+
+
 ### `targets`
 将收集到的信息转换为target并合并到本地配置中，主要用于动态加载targets配置
 1. 如果返回是内容以`{`或`[`字符开头，会以json反序列化，否则使用yml反序列化
@@ -291,6 +414,18 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
         rootPath: data # 仅json格式时有效，yml默认targets
       targets: null
 ```
+
+
+### `es.q`
+将Collector或上一环节中收集到的内容作为Query，在elastic search中执行，并返回结果
+```yaml
+    transform: 
+     es.q: 
+       server: xxx:9200 # es api server 默认 https://localhost:9200
+       username: xxx
+       password: xxx 
+```
+
 
 ### 自定义转换
 实现`ITransformer`接口即要，提供了`TransformerBase`和`TransformerBase<T>`两个基类简化实现，后续可使用强类型的参数，前者默认使用`Dictionary<string,object>`的类型参数
@@ -321,9 +456,11 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
        other2: xxxx
 ```
 
+
 ## 导出(export)
 所有导出方式是在ICollector和ITransformer执行完成后才触发
-### prometheus
+
+### `prometheus`
 将采集到的数据上报到prometheus，上报的key为target的name，value的处理方式如下：
 1. 如采集到的Content是数值，则转为double后上报
 1. 如采集到的Content是true/false，则转为1/0上报
@@ -336,6 +473,20 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
     enable: true # 是否启用
     port: 1234 # 供prometheus拉通数据的本地接口
 ```
+
+
+### `es`(elasticsearch)
+待实现：将收集到的数据导入到es指定集合中
+配置说明如下：
+``` yaml
+  es:
+    enable: true # 是否启用
+    server: http:xx:9200
+    username: xxx
+    password: xxx
+    indics: ???
+```
+
 
 ### 自定义导出
 实现`IExporter`接口，放入Plugin目录即可自动加载到运行时，如：
@@ -375,6 +526,7 @@ MetricsCollector会自动加载Plugins目录下的所有dll，如可实现`IColl
 ### `ICollectedDataPool`
 获取所有已采集到的数据，实现了IObservable，也可使用订阅模式
 
+
 ## 示例
 ### 生产最简单的配置
 使用agile提供targets配置
@@ -398,6 +550,7 @@ targets:
         rootPath: targets
 ```
 
+
 ### 使用OAuth2.0 AccessToken请求接口
 ``` yaml
 targets:
@@ -411,6 +564,7 @@ targets:
         clientId: xxx
         clientSecret: xxx
 ```
+
 
 ### 采集es索引健康度信息，将green等文本按字典转为数字
 ``` yaml
@@ -430,6 +584,7 @@ targets:
           yellow: 0.5
           red: 0
 ```
+
 
 ### 每5秒从指定url获取内容，并将内容转为target添加到配置中
 ``` yaml
@@ -454,6 +609,7 @@ targets:
       search:
         text: "百度"
 ```
+
 
 ### 将采集的json对象转换为指标CollectedData
 
@@ -499,6 +655,7 @@ targets:
           Unhealthy: 0
           Degraded: 0
 ```
+
 
 ### 将采集的json数组转换为指标CollectedData
 

@@ -11,12 +11,12 @@ namespace MCollector.Core.Transformers
     {
         public override string Name => "search";
 
-        public override bool Transform(CollectedData rawData, SearchTransformerArgs args, out IEnumerable<CollectedData> results)
+        public override Task<TransformResult> Transform(CollectedData rawData, SearchTransformerArgs args)
         {
             var data = new FinalCollectedData(rawData.Name, rawData.Target).CopyFrom(rawData);
             data.IsSuccess = false;
 
-            results = new List<CollectedData>() { data };
+            var results = new List<CollectedData>() { data };
 
             if (string.IsNullOrEmpty(args.Text) || rawData.Content?.IndexOf(args.Text, StringComparison.InvariantCultureIgnoreCase) >= 0)
             {
@@ -27,7 +27,7 @@ namespace MCollector.Core.Transformers
                 data.Content = $"无法查找到：{args.Text}，Content length：{rawData.Content?.Length ?? 0}";
             }
 
-            return true;
+            return Task.FromResult(TransformResult.CreateSuccess(results));
         }
     }
 

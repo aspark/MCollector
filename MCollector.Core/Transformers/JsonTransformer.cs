@@ -16,10 +16,9 @@ namespace MCollector.Core.Transformers
         public override string Name => "json";
 
 
-        public override bool Transform(CollectedData rawData, JsonTransformerArgs args, out IEnumerable<CollectedData> results)
+        public override Task<TransformResult> Transform(CollectedData rawData, JsonTransformerArgs args)
         {
             var list = new List<CollectedData>();
-            results = list;
 
             //改为不区分大小写
             if (args.ContentMapper != null)
@@ -47,18 +46,16 @@ namespace MCollector.Core.Transformers
                     AppendItem(rawData, args, root, ref list);
                 }
 
-                results = list.AsEnumerable();
-
                 if (list.Any())
                 {
                     if(args.ReserveRawData)
                         list.Insert(0, rawData);
 
-                    return true;
+                    return Task.FromResult(TransformResult.CreateSuccess(list));
                 }
             }
 
-            return false;
+            return Task.FromResult(TransformResult.CreateFailed());
         }
 
         private bool AppendItem(CollectedData rawData, JsonTransformerArgs args, JsonElement element, ref List<CollectedData> items)

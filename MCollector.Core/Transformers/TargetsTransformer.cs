@@ -26,10 +26,9 @@ namespace MCollector.Core.Transformers
             _protector = protector;
         }
 
-        public override bool Transform(CollectedData rawData, TargetsTransformerArgs args, out IEnumerable<CollectedData> results)
+        public override Task<TransformResult> Transform(CollectedData rawData, TargetsTransformerArgs args)
         {
             var items = new List<CollectedData>();
-            results = items;
             if (rawData.IsSuccess && string.IsNullOrWhiteSpace(rawData.Content) == false)
             {
                 var data = new CollectedData(rawData.Name, rawData.Target);
@@ -46,10 +45,10 @@ namespace MCollector.Core.Transformers
 
                 items.Add(data);
 
-                return true;
+                return Task.FromResult(TransformResult.CreateSuccess(items));
             }
 
-            return false;
+            return Task.FromResult(TransformResult.CreateFailed());
         }
 
         private List<CollectTarget> ConvertToTargets(string content, TargetsTransformerArgs args)

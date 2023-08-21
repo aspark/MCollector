@@ -32,7 +32,7 @@ namespace MCollector.Plugins.ES
                 {
                     foreach (var pair in stat.Indices)
                     {
-                        dic["indices-" + pair.Key] = pair.Value.Health ?? HealthStatus.Yellow;
+                        dic["indices-" + pair.Key] = pair.Value.Health ?? HealthStatus.Green; //为null是时是绿！~
                     }
                 }
 
@@ -55,12 +55,8 @@ namespace MCollector.Plugins.ES
         }
     }
 
-    internal class ESCollectorArgs
+    internal class ESCollectorArgs: ESArgsBase
     {
-        public string Username { get; set; }
-
-        public string Password { get; set; }
-
         public string IndicesSummaryName { get; set; } = ".mcollect.summary";
     }
 }

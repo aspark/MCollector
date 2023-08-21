@@ -40,5 +40,6 @@
     <ProjectReference Include="..\MCollector.Plugins.K8s\MCollector.Plugins.K8s.csproj" />
     <ProjectReference Include="..\MCollector.Plugins.OAuth\MCollector.Plugins.OAuth.csproj" />
     <ProjectReference Include="..\MCollector.Plugins.Prometheus\MCollector.Plugins.Prometheus.csproj" />
+    <ProjectReference Include="..\MCollector.Plugins.Sql\MCollector.Plugins.Sql.csproj" />
   </ItemGroup>
 </Project>

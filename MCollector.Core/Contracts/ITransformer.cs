@@ -12,6 +12,6 @@ namespace MCollector.Core.Contracts
     {
         public string Name { get; }
 
-        Task<IEnumerable<CollectedData>> Run(IEnumerable<CollectedData> items, Dictionary<string, object> args);
+        Task<IEnumerable<CollectedData>> Run(CollectTarget target, IEnumerable<CollectedData> items, Dictionary<string, object> args);
     }
 }

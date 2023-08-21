@@ -9,7 +9,7 @@ COPY . .
 RUN dotnet restore
 
 FROM build AS publish
-#常用的插件内置了：prometheus oauth2.0 es
+#常用的插件内置了：prometheus oauth es sql agileConfig k8s
 #需要将腾讯云的插件拷入
 RUN dotnet publish ./MCollector/MCollector.csproj -c Release -o /app/publish/MCollector \
  && dotnet publish ./MCollector.Plugins.TencentCloud/MCollector.Plugins.TencentCloud.csproj -c Release -o /app/publish/MCollector.Plugins.TencentCloud \
