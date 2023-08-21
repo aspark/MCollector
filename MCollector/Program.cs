@@ -43,6 +43,8 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(cfg =>
         typeof(MCollector.Plugins.ES.ESIndicesCollector).Assembly,
         typeof(MCollector.Plugins.AgileConfig.AgileConfigCollector).Assembly,
         typeof(MCollector.Plugins.K8s.K8sContainerCollector).Assembly,
+        typeof(MCollector.Plugins.Sql.SqlCollector).Assembly,
+        typeof(MCollector.Plugins.MongoDB.MongoDBCollector).Assembly,
     };
 
     //加载插件

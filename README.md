@@ -19,6 +19,7 @@
   - [`type: cmd`](#type-cmd)
   - [`type: file`](#type-file)
   - [`type: sql`](#type-sql)
+  - [`type:mongodb`](#typemongodb)
   - [`type: es.q`](#type-esq)
   - [`type: es.i`](#type-esi)
   - [`type: agileConfig`](#type-agileconfig)
@@ -227,9 +228,26 @@ targets: # 检测目标集合（target）
 ```
 
 
+### `type:mongodb`
+执行mongo json filter采集数据，contents有两种情况：
+1. 只有一个元素时，以单条语句在指定的collection上执行过滤查询， 如：`{ 'foo' : 'bar', 'baz':{'$gt': 7} }`，参见：https://www.mongodb.com/docs/manual/tutorial/query-documents/
+2. 有多个语句时：以Aggregation形式逐条执行(Stagging)
+``` yaml
+  - name: name # 名称
+    target: "" # mongodb地址，包含用户名和密码，如： "mongodb+srv://<username>:<password>@cluster0.abc.mongodb.net/?retryWrites=true&w=majority"
+    type: mongodb
+    args: 
+      db: xxx # 【必须】选择的数据库名
+      collection: xxx # 【必须】使用的集合
+    interval: 3
+    contents: # 
+      - {"p":1} # json filter
+```
+
+
 ### `type: es.q`
 从es中查询结果并以json返回，content可以为以下两种格式：
-1. DSL Query String：如：`(new york city) OR (big apple)`,需添加默认索引配置(`target`) 参见：https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html 
+1. DSL Query String：如：`(new york city) OR (big apple)`,**需添加默认索引配置(`target`)** 参见：https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html 
 2. json格式：整个body序列化内容（可包含query/aggregation等），参见：https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html
 > 一般会配合 `json` transform 或 `count` transform使用
 ``` yaml

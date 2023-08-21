@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCollector.Test", "MCollect
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.Sql", "MCollector.Plugins.Sql\MCollector.Plugins.Sql.csproj", "{81B539D9-73A3-43E0-812C-CF29EA9CA2B0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MCollector.Plugins.MongoDB", "MCollector.Plugins.MongoDB\MCollector.Plugins.MongoDB.csproj", "{12EE6C74-097E-4877-912A-BE823A761244}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{81B539D9-73A3-43E0-812C-CF29EA9CA2B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81B539D9-73A3-43E0-812C-CF29EA9CA2B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81B539D9-73A3-43E0-812C-CF29EA9CA2B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12EE6C74-097E-4877-912A-BE823A761244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12EE6C74-097E-4877-912A-BE823A761244}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12EE6C74-097E-4877-912A-BE823A761244}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12EE6C74-097E-4877-912A-BE823A761244}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
