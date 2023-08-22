@@ -35,7 +35,7 @@
   - [`json`](#json)
   - [`search`](#search)
   - [`count`](#count)
-  - [`targets`](#targets)
+  - [`mc.targets`](#mctargets)
   - [`es.q`](#esq)
   - [`mongodb`](#mongodb)
   - [自定义转换](#自定义转换)
@@ -423,11 +423,13 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
 返回收集到的Data集合数量，如一个target收集到一个data后，再用`json`转换为数组后，可以用`count`取到数据长度
 ```yaml
     transform: 
-     count: null # 无参数
+     count: 
+       mode: # 【可选】计数模式，summary：合计上游所有输入项，keep:对上游输入项分别记数，默认：summary
+       asJson: # 【可选】是否将输入作为json格式解析后，计算数组的数量，默认false
 ```
 
 
-### `targets`
+### `mc.targets`
 将收集到的信息转换为target并合并到本地配置中，主要用于动态加载targets配置
 1. 如果返回是内容以`{`或`[`字符开头，会以json反序列化，否则使用yml反序列化
 1. 默认忽略返回的cmd类型收集器
@@ -439,9 +441,9 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
     type: url
     interval: 5000ms
     transform:
-      targets:
+      mc.targets:
         rootPath: data # 仅json格式时有效，yml默认targets
-      targets: null
+      mc.targets: null
 ```
 
 

@@ -24,7 +24,7 @@ namespace MCollector.Test
             mProtector.Setup(p => p.FindAndUnprotectText(It.IsAny<string>())).Returns((string s) => s);
             mProtector.Setup(p => p.FindProtectedText(It.IsAny<string>())).Returns(new string[0]);
 
-            var transform = new TargetsTransformer(targetManager, mProtector.Object);
+            var transform = new MCTargetsTransformer(targetManager, mProtector.Object);
 
             var target = new CollectTarget()
             {
@@ -57,7 +57,7 @@ namespace MCollector.Test
             mProtector.Setup(p => p.FindAndUnprotectText(It.IsAny<string>())).Returns((string s) => s);
             mProtector.Setup(p => p.FindProtectedText(It.IsAny<string>())).Returns(new string[0]);
 
-            var transform = new TargetsTransformer(targetManager, mProtector.Object);
+            var transform = new MCTargetsTransformer(targetManager, mProtector.Object);
 
             var target = new CollectTarget()
             {

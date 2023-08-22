@@ -10,6 +10,6 @@ namespace MCollector.Core.Common
     {
         public static readonly string EncrptedTextPrefix = "$???:";
 
-        public static readonly string DicRefKey = "$REF";
+        public static readonly string DicRefKey = "$REF$";
     }
 }

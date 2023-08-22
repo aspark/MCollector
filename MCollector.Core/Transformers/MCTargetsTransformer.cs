@@ -13,14 +13,14 @@ using System.Xml.Linq;
 
 namespace MCollector.Core.Transformers
 {
-    internal class TargetsTransformer : TransformerBase<TargetsTransformerArgs>, ITransformer
+    internal class MCTargetsTransformer : TransformerBase<TargetsTransformerArgs>, ITransformer
     {
         ICollectTargetManager _targetManager;
         IProtector _protector;
 
-        public override string Name => "targets";
+        public override string Name => "mc.targets";
 
-        public TargetsTransformer(ICollectTargetManager targetManager, IProtector protector)//todo inject config
+        public MCTargetsTransformer(ICollectTargetManager targetManager, IProtector protector)//todo inject config
         {
             _targetManager = targetManager;
             _protector = protector;
@@ -31,7 +31,7 @@ namespace MCollector.Core.Transformers
             var items = new List<CollectedData>();
             if (rawData.IsSuccess && string.IsNullOrWhiteSpace(rawData.Content) == false)
             {
-                var data = new CollectedData(rawData.Name, rawData.Target);
+                var data = new FinalCollectedData(rawData.Name, rawData.Target);
 
                 var targets = ConvertToTargets(rawData.Content, args);
                 if (targets?.Any() == true)

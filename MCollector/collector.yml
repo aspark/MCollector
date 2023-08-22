@@ -82,7 +82,7 @@ targets:
     type: url
     interval: 5000ms
     transform:
-      targets:
+      mc.targets:
         rootPath: data
 refs:
   oauth: 
