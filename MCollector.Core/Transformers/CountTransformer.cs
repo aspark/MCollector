@@ -31,6 +31,7 @@ namespace MCollector.Core.Transformers
                 {
                     if (!string.IsNullOrEmpty(item.Content))
                     {
+                        //try { }
                         var json = JsonSerializer.Deserialize<JsonElement>(item.Content);
                         if (json.ValueKind == JsonValueKind.Array)
                         {
