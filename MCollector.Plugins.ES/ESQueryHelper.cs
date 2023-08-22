@@ -15,20 +15,15 @@ namespace MCollector.Plugins.ES
 {
     internal class ESQueryHelper
     {
-        public static async Task<string> Query(string server, string username, string password, string query, string queryTarget, ESQueryCollectorArgs_QueryParameters queryParameters)
+        public static async Task<string> Query(string server, string query, ESQueryArgs queryArgs)
         {
             var settings = new ElasticsearchClientSettings(new Uri(server));
-            settings.Authentication(new BasicAuthentication(username, password)).ServerCertificateValidationCallback((obj, x, c, e) => true);
+            settings.Authentication(new BasicAuthentication(queryArgs.Username, queryArgs.Password)).ServerCertificateValidationCallback((obj, x, c, e) => true);
 
             var client = new ElasticsearchClient(settings);
 
             if (!string.IsNullOrWhiteSpace(query))
             {
-                //var result = await client.SearchAsync<dynamic>(s=>s.From(0).Size(1).Query(q=>q.QueryString(""));
-                //foreach (var content in target.Contents)
-                //{
-                //}
-
                 SearchResponse<dynamic> result;
                 //纯KQL、Lucene
                 if (query.StartsWith('{') == false)
@@ -37,15 +32,15 @@ namespace MCollector.Plugins.ES
 
                     //https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax
                     result = await client.SearchAsync<dynamic>(s => {
-                        if (string.IsNullOrWhiteSpace(queryTarget))
+                        if (string.IsNullOrWhiteSpace(queryArgs.QueryTarget))
                         {
                             throw new ArgumentNullException("在使用DSL语句时，需要指定索引(target)");
                         }
 
-                        s.Index(Indices.Parse(queryTarget));
+                        s.Index(Indices.Parse(queryArgs.QueryTarget));
 
                         //s.AllowNoIndices
-                        SetQueryParameters(s, queryParameters);
+                        SetQueryParameters(s, queryArgs.Parameters);
 
                         s.Query(q => {
                             q.QueryString(c => c.Query(query));
@@ -59,7 +54,7 @@ namespace MCollector.Plugins.ES
                     var s = JsonSerializer.Deserialize<SearchRequest>(query)!;
 
                     //s.AllowNoIndices allow_no_indices
-                    SetQueryParameters(s, queryParameters);
+                    SetQueryParameters(s, queryArgs.Parameters);
 
                     result = await client.SearchAsync<dynamic>(s);
                 }
@@ -68,6 +63,11 @@ namespace MCollector.Plugins.ES
                 //data.Content = result.Total.ToString();
                 if (result.IsSuccess())
                 {
+                    if (queryArgs.Output == ESQueryArgs_OutputMode.TotalCount)
+                    {
+                        return result.Total.ToString();
+                    }
+
                     return JsonSerializer.Serialize(result.Documents);
                 }
 
@@ -109,6 +109,18 @@ namespace MCollector.Plugins.ES
         public string QueryTarget { get; set; }
 
         public ESQueryCollectorArgs_QueryParameters Parameters { get; set; }
+
+        /// <summary>
+        /// 查询模式(返回详情还是总数量)
+        /// </summary>
+        public ESQueryArgs_OutputMode Output { get; set; }
+    }
+
+    internal enum ESQueryArgs_OutputMode
+    {
+        Details = 0,
+
+        TotalCount
     }
 
     internal class ESQueryCollectorArgs_QueryParameters : Dictionary<string, object>

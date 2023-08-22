@@ -10,6 +10,9 @@
   - [容器方式](#容器方式)
   - [windows服务方式](#windows服务方式)
 - [接口](#接口)
+  - [查看所有采集结果](#查看所有采集结果)
+  - [触发重新采集](#触发重新采集)
+  - [加密配置项](#加密配置项)
 - [配置](#配置)
   - [target配置说明](#target配置说明)
 - [采集器(collect)](#采集器collect)
@@ -19,7 +22,7 @@
   - [`type: cmd`](#type-cmd)
   - [`type: file`](#type-file)
   - [`type: sql`](#type-sql)
-  - [`type:mongodb`](#typemongodb)
+  - [`type: mongodb`](#type-mongodb)
   - [`type: es.q`](#type-esq)
   - [`type: es.i`](#type-esi)
   - [`type: agileConfig`](#type-agileconfig)
@@ -34,6 +37,7 @@
   - [`count`](#count)
   - [`targets`](#targets)
   - [`es.q`](#esq)
+  - [`mongodb`](#mongodb)
   - [自定义转换](#自定义转换)
 - [导出(export)](#导出export)
   - [`prometheus`](#prometheus)
@@ -88,12 +92,16 @@ MCollector采集过程由四个阶段组成：
 ## 接口
 > 需在配置文件`api`中启用
 
+### 查看所有采集结果
+GET `http://[ip:port]/status` 
 
-1. GET `http://[ip:port]/status` 查看所有采集结果
+### 触发重新采集
+GET `http://[ip:port]/refresh` 
 
-2. GET `http://[ip:port]/refresh` 触发重新采集
-
-3. GET `http://[ip:port]/encrypt?content=xxx` 获取xxx的密文。不提供解密接口，该密文是在oauth, es, k8等配置项中使用，**配置中任何以`@???:`开始的字符都会尝试解密使用**
+### 加密配置项
+获取xxx的密文 
+GET `http://[ip:port]/encrypt?content=xxx` 
+不提供解密接口，该密文是在oauth, es, k8等配置项中使用，**配置中任何以`$???:`开始的字符都会被自动解密使用**
 
 
 > 因为需要将生成的密钥保存到本本，所以在docker容器内需要挂载一个目录到应用程目录下:`/app/keys/`，如：`docker run -d -v /temp-keys:/app/keys container-name`
@@ -228,7 +236,7 @@ targets: # 检测目标集合（target）
 ```
 
 
-### `type:mongodb`
+### `type: mongodb`
 执行mongo json filter采集数据，contents有两种情况：
 1. 只有一个元素时，以单条语句在指定的collection上执行过滤查询， 如：`{ 'foo' : 'bar', 'baz':{'$gt': 7} }`，参见：https://www.mongodb.com/docs/manual/tutorial/query-documents/
 2. 有多个语句时：以Aggregation形式逐条执行(Stagging)
@@ -239,6 +247,8 @@ targets: # 检测目标集合（target）
     args: 
       db: xxx # 【必须】选择的数据库名
       collection: xxx # 【必须】使用的集合
+      defaultLimit: 30 # 【可选】返回的集合数量，若设为`0`则表示返回全量数据，默认10
+      output: details # 【可选】结果样式，details:返回详细的数据集，totalCount:返回查询到的集合数量，默认details
     interval: 3
     contents: # 
       - {"p":1} # json filter
@@ -261,12 +271,13 @@ targets: # 检测目标集合（target）
       username: xxx # es用户名
       password: xxx # es密码
       target: xxx # 默认索引 Path parameters
+      output: details # 【可选】结果样式，details:返回详细的数据集，totalCount:返回查询到的集合数量，默认details
       parameters: # Query parameters
        xx: xx
     transform:
       json: 
         extractNameFrom: pro1
-        extractContentFrom: ?? 
+        extractContentFrom: pro2 
 ```
 > parameters: The q parameter overrides the query parameter in the request body
 
@@ -435,14 +446,33 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
 
 
 ### `es.q`
-将Collector或上一环节中收集到的内容作为Query，在elastic search中执行，并返回结果
+将CollectedData或上一环节中的输出作为Query，在elastic search中执行，并返回结果
 ```yaml
     transform: 
      es.q: 
        server: xxx:9200 # es api server 默认 https://localhost:9200
        username: xxx
        password: xxx 
+       target: xxx # 默认索引 Path parameters
+       output: details # 【可选】结果样式，details:返回详细的数据集，totalCount:返回查询到的集合数量，默认details
+       parameters: # Query parameters
+        xx: xx
 ```
+> parameters: The q parameter overrides the query parameter in the request body
+
+
+### `mongodb`
+将CollectedData或上一环节的输出为Query，在mongodb中执行，并返回结果，同collector`type:mongodb`
+```yaml
+    transform: 
+     mongodb: 
+       server: xxx:27017 # mongodb server，如： http://localhost:27017
+       db: xxx # 【必须】选择的数据库名
+       collection: xxx # 【必须】使用的集合
+       defaultLimit: 30 # 【可选】返回的集合数量，若设为`0`则表示返回全量数据，默认10
+       output: details # 【可选】结果样式，details:返回详细的数据集，totalCount:返回查询到的集合数量，默认details
+```
+> parameters: The q parameter overrides the query parameter in the request body
 
 
 ### 自定义转换

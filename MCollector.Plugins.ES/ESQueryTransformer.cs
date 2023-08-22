@@ -27,7 +27,7 @@ namespace MCollector.Plugins.ES
             {
                 var data = new CollectedData(rawData.Target.Name, rawData.Target);
 
-                data.Content = await ESQueryHelper.Query(args.Server, args.Username, args.Password, rawData.Content, args.QueryTarget, args.Parameters);
+                data.Content = await ESQueryHelper.Query(args.Server, rawData.Content, args);
 
                 items.Add(data);
 

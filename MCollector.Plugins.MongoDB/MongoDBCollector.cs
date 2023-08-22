@@ -15,30 +15,7 @@ namespace MCollector.Plugins.MongoDB
         {
             var data = new CollectedData(target.Name, target);
 
-            var client = new MongoClient(target.Target);
-
-            var db = client.GetDatabase(args.db);
-
-            if(target.Contents?.Any() == true)
-            {
-                var collection = db.GetCollection<dynamic>(args.Collection);
-                if(target.Contents.Length == 1)
-                {
-                    var query = target.Contents.Last();//$filter
-                    var result = collection.Find(query).Limit(args.DefaultLimit).ToList();
-                    //collection.find("").Skip().Limit();
-                    data.Content = JsonSerializer.Serialize(result);
-                }
-                else
-                {
-                    PipelineDefinition<dynamic, dynamic> stages = target.Contents.Select(c => BsonDocument.Parse(c)).ToList();
-                    var result = await collection.AggregateAsync<dynamic>(stages);
-                    data.Content = JsonSerializer.Serialize(result);
-                }
-            }
-
-            //BsonDocument.Parse(query)
-            //var result = await db.RunCommandAsync<dynamic>(query);
+            data.Content = await MongoDBHelper.Query(target.Target, target.Contents, args);
 
             return data;
         }
@@ -50,6 +27,15 @@ namespace MCollector.Plugins.MongoDB
 
         public string Collection { get; set; }
 
-        public int DefaultLimit { get; set; } = 100;
+        public int DefaultLimit { get; set; } = 30;
+
+        public MongoDBArgs_OutputMode Output { get; set; }
+    }
+
+    public enum MongoDBArgs_OutputMode
+    {
+        Details = 0,
+
+        TotalCount
     }
 }

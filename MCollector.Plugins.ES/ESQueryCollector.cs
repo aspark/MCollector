@@ -38,7 +38,7 @@ namespace MCollector.Plugins.ES
 
 
                 //data.Content = result.Total.ToString();
-                data.Content = await ESQueryHelper.Query(target.Target, args.Username, args.Password, query, args.QueryTarget, args.Parameters);
+                data.Content = await ESQueryHelper.Query(target.Target, query, args);
             }
 
             return data;
