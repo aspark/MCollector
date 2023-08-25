@@ -1,6 +1,6 @@
 ﻿采集器
 
-通过curl、ping、telnet、cmd等多种方式采集目标数据，可用于健康检测等拨测场景  
+通过curl、ping、telnet、cmd、elastic search、mongoDB、sql、k8s、tcloud等多种方式采集目标数据，并可将采集到的数据转为多种格式导入到prometheus/es等系统。如：可用于健康检测、拨测等场景  
 
 
 - [设计](#设计)
@@ -9,9 +9,9 @@
   - [单独执行](#单独执行)
   - [容器方式](#容器方式)
   - [windows服务方式](#windows服务方式)
-- [接口](#接口)
+- [服务接口](#服务接口)
   - [查看所有采集结果](#查看所有采集结果)
-  - [触发重新采集](#触发重新采集)
+  - [触发采集](#触发采集)
   - [加密配置项](#加密配置项)
 - [配置](#配置)
   - [target配置说明](#target配置说明)
@@ -26,6 +26,7 @@
   - [`type: es.q`](#type-esq)
   - [`type: es.i`](#type-esi)
   - [`type: agileConfig`](#type-agileconfig)
+  - [`type: k8s.xxx`](#type-k8sxxx)
   - [`type: tcloud`](#type-tcloud)
   - [自定义采集方式](#自定义采集方式)
 - [预处理(prepare)](#预处理prepare)
@@ -50,11 +51,14 @@
 - [示例](#示例)
   - [生产最简单的配置](#生产最简单的配置)
   - [使用OAuth2.0 AccessToken请求接口](#使用oauth20-accesstoken请求接口)
-  - [采集es索引健康度信息，将green等文本按字典转为数字](#采集es索引健康度信息将green等文本按字典转为数字)
+  - [采集es索引健康度信息，将green等文本按字典转为数字指标](#采集es索引健康度信息将green等文本按字典转为数字指标)
   - [每5秒从指定url获取内容，并将内容转为target添加到配置中](#每5秒从指定url获取内容并将内容转为target添加到配置中)
-  - [间隔在10秒到20秒间，从指定url获取内容，并检查内容转中是否存在指定文字](#间隔在10秒到20秒间从指定url获取内容并检查内容转中是否存在指定文字)
+  - [随机间隔在10秒到20秒间，从指定url获取内容，并检查内容中是否存在指定文字](#随机间隔在10秒到20秒间从指定url获取内容并检查内容中是否存在指定文字)
   - [将采集的json对象转换为指标CollectedData](#将采集的json对象转换为指标collecteddata)
   - [将采集的json数组转换为指标CollectedData](#将采集的json数组转换为指标collecteddata)
+  - [从sql server查询业务指标](#从sql-server查询业务指标)
+  - [从mongodb查询业务指标](#从mongodb查询业务指标)
+  - [从es查询业务指标](#从es查询业务指标)
 
 
 ## 设计
@@ -66,7 +70,7 @@ MCollector采集过程由四个阶段组成：
 
 串联关系如下：
 
-**Prepare**(可多个串联)->**Collect**(Target)->**Transfrom**(可多个串联)->**Export**(多个并行)
+**Prepare**(可多个串联)-->**Collect**(Target)-->**Transfrom**(可多个串联)-->**Export**(多个并行)
 
 
 ## 编译
@@ -87,30 +91,31 @@ MCollector采集过程由四个阶段组成：
 ### windows服务方式
 使用 `install.bat` 或 `uninstall.bat`脚本来安装或卸载windows服务
 
-> 已经内置了 prometheus oauth es sql agileConfig k8s等插件，这内个项止无需部署到Plugins目录中
+> 已经内置了 prometheus oauth es sql agileConfig k8s等插件，这内个项目无需部署到Plugins目录中
 
-## 接口
+## 服务接口
 > 需在配置文件`api`中启用
 
 ### 查看所有采集结果
 GET `http://[ip:port]/status` 
 
-### 触发重新采集
+### 触发采集
 GET `http://[ip:port]/refresh` 
 
 ### 加密配置项
-获取xxx的密文 
-GET `http://[ip:port]/encrypt?content=xxx` 
-不提供解密接口，该密文是在oauth, es, k8等配置项中使用，**配置中任何以`$???:`开始的字符都会被自动解密使用**
+GET `http://[ip:port]/encrypt?content=xxx`   
+xxx：需要加密的内容 
 
+不提供解密接口，该密文可以在oauth, es, k8等配置项中使用
+> **配置中任何以`$???:`开始的字符都会被自动解密使用**
 
-> 因为需要将生成的密钥保存到本本，所以在docker容器内需要挂载一个目录到应用程目录下:`/app/keys/`，如：`docker run -d -v /temp-keys:/app/keys container-name`
+> 因为需要将生成的密钥保存到本地，所以在docker容器内需要挂载一个目录到应用程目录下:`/app/keys/`，如：`docker run -d -v /temp-keys:/app/keys container-name`
 
 ## 配置
 默认配置文件为`collector.yml`，系统也会合并`collector.*.yml`中的targets/exporter配置项，示例如下：
 
 ```yaml
-port: 18086 # 应用提供服务的端口
+port: 18086 # mcollector提供服务的端口
 api: 
   status: true # 【可选】是否启用status接口
   statusContainsSuccessDetails: false # 【可选】是否在成功状态时也显示采集到的详情，默认false
@@ -125,10 +130,10 @@ targets: # 检测目标集合（target）
   - name: curl local # 名称
     target: "http://127.0.0.1" # 目标
     type: url # 采集方式
-    args: # 传入type对应collector的参数
+    args: # 可选】传入type对应collector的参数，按需传入多个
       a1: 1
       a2: 2
-    interval: 3 # 检测间隔时间，单位：s，默认3s，也可使用ms,m,h,rand(10s,20s),rand(10s)等单位
+    interval: 3 # 可选】检测间隔时间，也可使用ms,m,h,rand(10s,20s),rand(10s)等单位，默认单位：s，默认3s
     headers: # 【可选】头信息，键值对
       Host: xxx.com
       Content-Type: application/json
@@ -151,7 +156,7 @@ targets: # 检测目标集合（target）
 | target | string | 目标地址 |
 | type | string | 使用的Collector名称 |
 | args | dictionary | Collector执行时的参数 |
-| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟)、h(小时) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内浮动 |
+| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟)、h(小时) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内随机 |
 | headers | dictionary | 请求头，可使用prepare修改target的内容，如：oauth21 |
 | contents | string[] | 请求消息体 |
 | transform | dictionary | 结果转换 |
@@ -161,7 +166,7 @@ targets: # 检测目标集合（target）
 使用http GET的方式请求目标
 1. 如配置了contents，将改用POST，并将Contents数据内容按字符拼接后放入request body
 1. 会自动跟踪302跳转
-1. 若返回http code大于400，则判断为失败
+1. 若返回的http code大于400，则判断为失败
 
 ``` yaml
   - name: name # 名称
@@ -202,13 +207,13 @@ targets: # 检测目标集合（target）
     target: "" # 【可选】 win默认`cmd` linux默认`bin/bash`
     type: cmd
       args:
-       outputTimeout: 1500 # 【可选】 等待输出的时间
+       outputTimeout: 1500 # 【可选】 等待输出的时间，超过时间还没有输出，则认为当前语句执行完成了
     interval: 3
     contents:
       - openssl s_client --connect www.baidu.com
       - echo ok
 ```
-> 一般会配合transformer使用，如检测web服务是否支持tls1.2
+> 一般会配合transformer使用，如：检测web服务是否支持tls1.2
 
 
 ### `type: file`
@@ -222,24 +227,26 @@ targets: # 检测目标集合（target）
 
 
 ### `type: sql`
-使用sql从关系型数据库收集信息
-> 可以配合`targets` transform，从数据库读取配置并发起收集，如添加：Collector.UI项目可视化管理targets
+使用sql从关系型数据库收集信息，结果为json格式
+> 可以配合`mc.targets` transform，从数据库读取配置并发起收集，如添加：`Collector.UI`项目来可视化管理`targets`
 ``` yaml
   - name: name # 名称
     target: "" # db地址
     type: rdbms
     args: 
       type: mssql # 【可选】数据库类型：mssql/mysql/pgsql/sqlite，默认：mssql
+      timout: 300 # 【可选】查询超时时间，单位秒，默认 300秒
     interval: 3
-    contents: # sql语句，以最后一条sql的结果作为获取的内容，以json格式序列化为string
+    contents: # sql语句，会逐条扫行sql，但以最后一条sql的结果作为内容返回，以json格式序列化为string
       - select * from ... # sql
 ```
 
 
 ### `type: mongodb`
-执行mongo json filter采集数据，contents有两种情况：
-1. 只有一个元素时，以单条语句在指定的collection上执行过滤查询， 如：`{ 'foo' : 'bar', 'baz':{'$gt': 7} }`，参见：https://www.mongodb.com/docs/manual/tutorial/query-documents/
-2. 有多个语句时：以Aggregation形式逐条执行(Stagging)
+执行mongo json filter采集数据，`contents`数组有两种情况：
+1. 只有一个元素时：以单条语句在指定的collection上执行过滤查询， 如：`{ 'foo' : 'bar', 'baz':{'$gt': 7} }`，参见：https://www.mongodb.com/docs/manual/tutorial/query-documents/
+2. 有多个元素时：以Aggregation形式执行(一个元素对应一个Stagging)
+> 一般会配合 `json` transform 或 `count` transform将采集的内容转为指标上报
 ``` yaml
   - name: name # 名称
     target: "" # mongodb地址，包含用户名和密码，如： "mongodb+srv://<username>:<password>@cluster0.abc.mongodb.net/?retryWrites=true&w=majority"
@@ -284,6 +291,7 @@ targets: # 检测目标集合（target）
 
 ### `type: es.i`
 es索引状态收集，**固定搭配transform:json使用**
+> 所有索引名会添加`indices-`的前缀
 > 默认会添加一个名称为indices-mcollect.summary的指标(名称可使用`args.indicesSummaryName`配置改为其它)，其值由所有索引状态决定：任一个为红时值为红，任一个为黄时值为黄，全绿时才是绿
 ``` yaml
   - name: name # 名称
@@ -294,6 +302,7 @@ es索引状态收集，**固定搭配transform:json使用**
     args: # es 配置
       username: xxx # es用户名
       password: xxx # es密码
+      indicesSummaryName: .mcollect.summary # 【可选】自动添加了指标名称，默认：.mcollect.summary
     transform:
       json:
         extractNameFromProperty: true
@@ -322,6 +331,8 @@ es索引状态收集，**固定搭配transform:json使用**
         rootPath: targets
 ```
 
+### `type: k8s.xxx`
+todo
 
 ### `type: tcloud`
 腾讯云TKE信息收集，**固定搭配transform:json使用**
@@ -365,7 +376,7 @@ es索引状态收集，**固定搭配transform:json使用**
 
 ## 预处理(prepare)
 ### `oauth20`
-使用OAuth2.0方式，为请求添加头信息 Authorization:AccessToken
+使用OAuth2.0方式，为请求添加头信息：`Authorization:AccessToken`
 
 ```yaml
     prepare: 
@@ -435,7 +446,7 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
 1. 默认忽略返回的cmd类型收集器
 1. 该转换会覆盖本地的target配置
 
-``` ymal
+```yaml
   - name: merge config
     target: http://localhost/config_mc
     type: url
@@ -474,7 +485,6 @@ internal class CustomPreparer : PreparerBase<CustomArgs>
        defaultLimit: 30 # 【可选】返回的集合数量，若设为`0`则表示返回全量数据，默认10
        output: details # 【可选】结果样式，details:返回详细的数据集，totalCount:返回查询到的集合数量，默认details
 ```
-> parameters: The q parameter overrides the query parameter in the request body
 
 
 ### 自定义转换
@@ -534,7 +544,7 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
     server: http:xx:9200
     username: xxx
     password: xxx
-    indics: ???
+    index: ???
 ```
 
 
@@ -556,7 +566,9 @@ internal class CustomExporter : IExporter, IDisposable, IAsSingleton, IObserver<
 
 
 ## 插件
-MetricsCollector会自动加载Plugins目录下的所有dll，如可实现`ICollector`、`IExporter`、`ITransformer`等接口来自定义检测方式、数据转换等
+MCollector会自动加载Plugins目录下的所有dll，如可实现`ICollector`、`IExporter`、`ITransformer`等接口来自定义检测方式、数据转换等
+
+> todo: lua support
 
 ## Dev说明
 
@@ -574,7 +586,7 @@ MetricsCollector会自动加载Plugins目录下的所有dll，如可实现`IColl
 | LastCollectTime | DateTime | 最后执行时间 |
 
 ### `ICollectedDataPool`
-获取所有已采集到的数据，实现了IObservable，也可使用订阅模式
+获取所有已采集到的数据，实现了IObservable，可使用订阅模式
 
 
 ## 示例
@@ -596,7 +608,7 @@ targets:
       env: PROD
     interval: 3
     transform:
-      targets: 
+      mc.targets: 
         rootPath: targets
 ```
 
@@ -616,7 +628,7 @@ targets:
 ```
 
 
-### 采集es索引健康度信息，将green等文本按字典转为数字
+### 采集es索引健康度信息，将green等文本按字典转为数字指标
 ``` yaml
 targets:
   - name: es indices
@@ -644,11 +656,11 @@ targets:
     type: url
     interval: 5000ms
     transform:
-      targets: null # 不需要做json解析
+      mc.targets: null # 不需要做json解析
 ```
 
 
-### 间隔在10秒到20秒间，从指定url获取内容，并检查内容转中是否存在指定文字
+### 随机间隔在10秒到20秒间，从指定url获取内容，并检查内容中是否存在指定文字
 ``` yaml
 targets:
   - name: curl baidu
@@ -663,7 +675,7 @@ targets:
 
 ### 将采集的json对象转换为指标CollectedData
 
-返回的json如下
+采集的json content如下
 ``` json
 {
   "status": "Healthy",
@@ -681,7 +693,7 @@ targets:
   }
 }
 ```
-需转换为
+需转换为(CollectedData)
 ``` json
 [
   {"Name":"Node1", "Content":"1", "IsSuccess":true},
@@ -708,14 +720,14 @@ targets:
 
 
 ### 将采集的json数组转换为指标CollectedData
-
+如需要将采集到的以下json content
 ``` json
 [
 {"Name":"Node1", "Value":"1"},
 {"Name":"Node1", "Value":"1"},
 ]
 ```
-需转换为
+转换为(CollectedData)
 ``` json
 [
   {"Name":"Node1", "Content":"1", "IsSuccess":true},
@@ -734,4 +746,65 @@ targets:
         rootPath: results
         extractNameFrom: name
         extractContentFrom: value
+```
+
+
+### 从sql server查询业务指标
+执行指定sql并使用`json`提供指定列为指标
+``` yaml
+  - name: db sql
+    target: "data source=localhost;database=test;uid=;pwd="
+    type: sql
+    interval: 3
+    contents:
+      - "select name, count(1) as count from test group by name"
+    transform:
+      json:
+        extractNameFrom: name
+        extractContentFrom: count
+```
+
+### 从mongodb查询业务指标
+
+在Mongodb使用指定filter查询数据，并使用`json`transform提取指定的属性作为指标上报
+```yaml
+  - name: mongodb
+    target: "mongodb://user:pwd@127.0.0.1:27011"
+    type: mongodb
+    args:
+      db: "DBName"
+      collection: "CollectionName"
+      output: totalCount
+    interval: 3
+    contents:
+      - "{\"Status\":0}"
+    transform:
+      json:
+        extractNameFrom: Prop1
+        extractContentFrom: Prop2
+        #extractRemarkFrom: Remark
+```
+
+### 从es查询业务指标
+
+在es中查询指字条件的记录数量
+
+```yaml
+  - name: es query
+    target: "https://127.0.0.1:9200/"
+    type: es.q
+    args:
+      username: elastic name
+      password: elastic pwd
+      target: "index-*"
+      parameters:
+        allow_no_indices: true
+    interval: 3
+    output: totalCount
+    contents:
+      - "aspnet-request-url:\"http://127.0.0.1/api/config\" AND logger:RequestEnd"
+    #transform: # 或都用json 提取指定属性上报
+    #  json:
+    #    extractNameFrom: appdomain
+    #    extractContentFrom: aspnet-response-statuscode
 ```

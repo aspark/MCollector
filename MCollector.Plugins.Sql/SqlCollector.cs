@@ -30,7 +30,7 @@ namespace MCollector.Plugins.Sql
                 {
                     if (i < length - 1)
                     {
-                        await connection.ExecuteAsync(target.Contents[i]);
+                        await connection.ExecuteAsync(target.Contents[i], commandTimeout: args.Timeout);
                     }
                     else
                     {
