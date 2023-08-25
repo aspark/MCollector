@@ -5,3 +5,4 @@ bin
 Properties
 *.loc.yml
 *.cache
+*.user

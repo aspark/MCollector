@@ -101,7 +101,7 @@ namespace MCollector.Plugins.Prometheus
         {
             Interlocked.CompareExchange(ref _removeKeysTask, Task.Run(() =>
             {
-                var exists = new HashSet<string>(_resultAccessor.GetData().Select(d => NormalizeName(d.Name)));
+                var exists = new HashSet<string>(_resultAccessor.GetData().Select(d => d.Name));
                 foreach (var key in _dicMetrixs.Keys)
                 {
                     if (exists.Contains(key) == false)

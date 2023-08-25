@@ -85,10 +85,22 @@ namespace MCollector.Core
             _collectorSignal.Dispose();
         }
 
-        public void Start()
+        public async Task Start()
         {
             _tokenSource = new CancellationTokenSource();
             _isRunning = true;
+
+            //要先启动exporter，不然可能有数据丢失
+            if (_config.Exporter?.Any() == true)
+            {
+                foreach (var exporterConfig in _config.Exporter)
+                {
+                    if (_exporters.ContainsKey(exporterConfig.Key))
+                    {
+                        await _exporters[exporterConfig.Key].Start(exporterConfig.Value ?? new Dictionary<string, object>());
+                    }
+                }
+            }
             
             foreach (var target in _targetManager.GetAll())
             {
@@ -96,17 +108,6 @@ namespace MCollector.Core
             }
 
             _targetManager.AddChangedCallback(StartImpl);
-
-            if (_config.Exporter?.Any() == true)
-            {
-                foreach (var exporterConfig in _config.Exporter)
-                {
-                    if (_exporters.ContainsKey(exporterConfig.Key))
-                    {
-                        _exporters[exporterConfig.Key].Start(exporterConfig.Value ?? new Dictionary<string, object>());
-                    }
-                }
-            }
         }
 
         bool _isRunning = false;
