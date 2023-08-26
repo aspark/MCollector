@@ -14,5 +14,7 @@ namespace MCollector.Plugins.Prometheus
         /// 暴露的接口
         /// </summary>
         public int Port { get; set; }
+
+        public string Labels { get; set; } = string.Empty;
     }
 }

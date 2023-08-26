@@ -56,8 +56,8 @@ namespace MCollector.Test
             var str = @"
       prometheus:
         args: 
-          p1: 1
-          p2: 2
+          enable: false
+          labels: abc
         transform: 
           search:
             text: 1
@@ -75,7 +75,7 @@ namespace MCollector.Test
 
             SerializerHelper.TryCreateFrom<ExtrasPrometheusConfig>(dic, "prometheus", out var obj).ShouldBe(true);
             obj.ShouldNotBeNull();
-            obj.Args.Count.ShouldBe(2);
+            obj.Args.Enable.ShouldBe(false);
             obj.Transform.Count.ShouldBe(1);
             obj.Transform.First().Key.ShouldBe("search");
 

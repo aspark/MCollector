@@ -4,6 +4,7 @@ using MCollector.Core.Contracts;
 using Microsoft.Extensions.Options;
 using Prometheus;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -42,7 +43,7 @@ namespace MCollector.Plugins.Prometheus
             if (proConfig?.Enable == true)
             {
                 Metrics.SuppressDefaultMetrics();
-
+                _gloableLables = GetLableNames(proConfig.Labels);
                 _server = new MetricServer(port: proConfig?.Port ?? 9090);
                 _server.Start();
 
@@ -53,7 +54,12 @@ namespace MCollector.Plugins.Prometheus
             return Task.CompletedTask;
         }
 
+        private string[] GetLableNames(string label)
+        {
+            return (label ?? "").Split(',', ';', '，', '；').Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();// .Select(n => NormalizeName(n)) 写入prometheus时才合规化，不然不能映射回header了或要多次转换
+        }
 
+        private string[] _gloableLables = new string[0];
         ConcurrentDictionary<string, Gauge> _dicMetrixs = new ConcurrentDictionary<string, Gauge>();
         private async Task Update(CollectedData data)
         {
@@ -61,12 +67,23 @@ namespace MCollector.Plugins.Prometheus
             {
                 CollectedData[] items = new[] { data };
 
-                ;
+                var lableNames = _gloableLables.ToArray();
+
                 if (data.Target.Extras.TryGetCustomConfig<ExtrasPrometheusConfig>("exporter." + this.Name, out var extras))
                 {
-                    //target传入的export参数
+                    //target传入的参数
+                    
+                    //该target不上报
+                    if (extras?.Args?.Enable == false)
+                        return;
 
-                    if (extras.Transform?.Any() == true)
+                    if(extras?.Args.Labels?.Any() == true)
+                    {
+                        //与全局label组装
+                        lableNames = lableNames.Concat(GetLableNames(extras.Args.Labels)).ToArray();
+                    }
+
+                    if (extras?.Transform?.Any() == true)
                     {
                         //再次转换数据
                         items = (await _transformerRunner.Transform(data.Target, items, extras.Transform)).ToArray();
@@ -75,7 +92,7 @@ namespace MCollector.Plugins.Prometheus
 
                 foreach (var item in items)
                 {
-                    var gauge = _dicMetrixs.GetOrAdd(item.Name, k => Metrics.CreateGauge(NormalizeName(item.Name), item.Name));//名称可能非法
+                    var gauge = _dicMetrixs.GetOrAdd(item.Name, k => Metrics.CreateGauge(NormalizeName(item.Name), item.Name, lableNames.Select(n => NormalizeName(n)).ToArray()));//名称可能非法
 
                     //如果内容是数据，侧用数据上报
                     if (item.IsSuccess && item.Content != null)
@@ -103,7 +120,12 @@ namespace MCollector.Plugins.Prometheus
                     }
 
                     //lable values
-                    //data.Remark?.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(l=> NormalizeName(l)).ToArray() ?? new string[0]
+                    if (lableNames.Any() && item.Headers?.Any() == true)
+                    {
+                        var labelValues = lableNames.Select(l => item.Headers.ContainsKey(l) ? (item.Headers[l]?.ToString() ?? "") : "").ToArray();
+
+                        gauge.WithLabels(labelValues);
+                    }
                 }
 
             }

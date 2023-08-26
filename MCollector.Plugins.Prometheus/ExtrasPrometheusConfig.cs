@@ -9,7 +9,7 @@ namespace MCollector.Plugins.Prometheus
 {
     internal class ExtrasPrometheusConfig
     {
-        public Dictionary<string, object> Args { get; set; } = new Dictionary<string, object>();
+        public CollectorPrometheusConfig Args { get; set; }
 
         public TransferConfig Transform { get; set; } = new TransferConfig();
     }

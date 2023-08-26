@@ -538,6 +538,7 @@ export:
   prometheus:
     enable: true # 是否启用
     port: 1234 # 供prometheus拉通数据的本地接口
+    labels: "" # 【可选】需要添加的标签，多个标签可用分号分隔，会以标签为Key从`CollectedData.Header`中取值上报，默认空
 ```
 
 也可在`target.extras`中为对应target添加特定的配置，如，除了target通用transform，*在导入到prometheus时额外添加label或另外再transform：
@@ -548,8 +549,9 @@ export:
     extras: 
       exporter: # 【固定值】
         prometheus: # 为该target配置独立的参数
-          args: # 【可选】特定的上报参数
-            p1: 1 # 【todo】任意参数
+          args: # 【可选】特定的上报参数，
+            enable: true # 该target的指标是否上报
+            labels: "a;b;c" # 【可选】需要添加的标签，多个标签可用分号分隔，会以标签为Key从`CollectedData.Header`中取值上报，默认空
           transform: # 【可选】与通用transform配置一致
             json: null
             [...]
