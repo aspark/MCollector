@@ -24,6 +24,13 @@ targets:
     transform:
       search:
         text: "baidu"
+    extras:
+      exporter:
+        prometheus:
+          args: 
+            p1: 1
+            p2: 2
+          transform: null
   - name: curl baidu failed
     target: "http://baidu.com"
     type: url

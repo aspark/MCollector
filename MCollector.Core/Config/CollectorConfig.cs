@@ -14,7 +14,7 @@ namespace MCollector.Core.Config
         /// <summary>
         /// 暴露的端口
         /// </summary>
-        public int Port { get; set; } = 18080;
+        public int Port { get; set; } = 18086;
 
         public CollectorApiConfig Api { get; set; }
 
@@ -25,10 +25,11 @@ namespace MCollector.Core.Config
         /// </summary>
         public CollectTarget[] Targets { get; set; }
 
-        /// <summary>
-        /// 引用的公共配置，主要用于prepare/tranform等使用
-        /// </summary>
-        public CollectorRefConfig Refs { get; set; } = new CollectorRefConfig();
+        ///// <summary>
+        ///// 引用的公共配置，主要用于prepare/tranform等使用
+        ///// 可使用yaml自带的引用
+        ///// </summary>
+        //public CollectorRefConfig Refs { get; set; } = new CollectorRefConfig();
 
         //public T ConvertTo<T>(Dictionary<string, object> parameters) where T : class, new()
         //{
@@ -48,10 +49,10 @@ namespace MCollector.Core.Config
         public bool Refresh { get; set;} = true;
     }
 
-    public class CollectorRefConfig: Dictionary<string, Dictionary<string , object>>
-    {
-        //public string Name { get; set; }
+    //public class CollectorRefConfig: Dictionary<string, Dictionary<string , object>>
+    //{
+    //    //public string Name { get; set; }
 
-        //public Dictionary<string, object> Data { get; set; }
-    }
+    //    //public Dictionary<string, object> Data { get; set; }
+    //}
 }

@@ -13,7 +13,7 @@ namespace MCollector.Core.Config
             {
                 //var config = Activator.CreateInstance(typeof(T)) as T;
                 //var config = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(this[name]), new JsonSerializerOptions { PropertyNameCaseInsensitive = true});
-                var config = SerializerHelper.Deserialize<T>(this[name]);
+                var config = SerializerHelper.CreateFrom<T>(this[name]);
 
                 return config;
             }

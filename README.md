@@ -115,7 +115,7 @@ xxx：需要加密的内容
 默认配置文件为`collector.yml`，系统也会合并`collector.*.yml`中的targets/exporter配置项，示例如下：
 
 ```yaml
-port: 18086 # mcollector提供服务的端口
+port: 18086 # mcollector提供服务的端口，默认18086
 api: 
   status: true # 【可选】是否启用status接口
   statusContainsSuccessDetails: false # 【可选】是否在成功状态时也显示采集到的详情，默认false
@@ -123,7 +123,7 @@ api:
 exporter: # 检测结果导出，，如：prometheus、邮件通知等等
   prometheus: # prometheus的自定义配置
     enable: true
-    port: 1234
+    port: 1234 
   email:
     host: 0:21
 targets: # 检测目标集合（target）
@@ -147,11 +147,16 @@ targets: # 检测目标集合（target）
       other: # 其它转换器串联
         params: xxx
       [...]
+    extras: # 【可选】随target的扩展配置，如可以在自定义组件中针对特别target配置，可参见prometheus exporter实现
+      ex1: xxx
+      ex2:
+        p1: xx
+        p2: xx
 ```
 
 ### target配置说明
 | 字段 | 类型 | 说明 |
-|-|-|-|
+|------|-|-|
 | name | string | 名称 |
 | target | string | 目标地址 |
 | type | string | 使用的Collector名称 |
@@ -159,7 +164,8 @@ targets: # 检测目标集合（target）
 | internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟)、h(小时) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内随机 |
 | headers | dictionary | 请求头，可使用prepare修改target的内容，如：oauth21 |
 | contents | string[] | 请求消息体 |
-| transform | dictionary | 结果转换 |
+| transform | dictionary | 统一结果转换 |
+| extras | dictionary | 自定义组件的扩展配置，组件可通过`[collectedData].Target.Extras.TryGetCustomConfig<T>("path.path", out var config)`获取到强类型的配置或直接通过索引获取字典项 |
 
 ## 采集器(collect)
 ### `type: url`
@@ -525,15 +531,30 @@ internal class CustomTransformer : TransformerBase<CustomTransformerArgs>
 1. 如采集到的Content是数值，则转为double后上报
 1. 如采集到的Content是true/false，则转为1/0上报
 1. 其它情况以是否采集成为IsSuccess，转为1/0上报
-1. 会将采集到的Remark作为Label上报，如果Remark中有英文分号，则处理为多个label
 
-配置说明如下：
+全局配置说明如下：
 ``` yaml
+export: 
   prometheus:
     enable: true # 是否启用
     port: 1234 # 供prometheus拉通数据的本地接口
 ```
 
+也可在`target.extras`中为对应target添加特定的配置，如，除了target通用transform，*在导入到prometheus时额外添加label或另外再transform：
+
+``` yaml
+  targets:
+  - name: xxx
+    extras: 
+      exporter: # 【固定值】
+        prometheus: # 为该target配置独立的参数
+          args: # 【可选】特定的上报参数
+            p1: 1 # 【todo】任意参数
+          transform: # 【可选】与通用transform配置一致
+            json: null
+            [...]
+        
+```
 
 ### `es`(elasticsearch)
 待实现：将收集到的数据导入到es指定集合中
@@ -581,7 +602,6 @@ MCollector会自动加载Plugins目录下的所有dll，如可实现`ICollector`
 | IsSuccess | bool | 采集是否成功，**不代表目标是否健康** |
 | Headers | string[] | 采集到的头信息 |
 | Content | string | 采集到的内容 |
-| Remark | string | 采集到的备注 |
 | Duration | long | 采集耗时，ms |
 | LastCollectTime | DateTime | 最后执行时间 |
 
@@ -782,7 +802,6 @@ targets:
       json:
         extractNameFrom: Prop1
         extractContentFrom: Prop2
-        #extractRemarkFrom: Remark
 ```
 
 ### 从es查询业务指标

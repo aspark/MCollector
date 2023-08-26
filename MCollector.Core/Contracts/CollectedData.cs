@@ -45,10 +45,10 @@ namespace MCollector.Core.Contracts
         /// </summary>
         public string? Content { get; set; }//object
 
-        /// <summary>
-        /// 采集内容备注
-        /// </summary>
-        public string? Remark { get; set; }
+        ///// <summary>
+        ///// 采集内容备注
+        ///// </summary>
+        //public string? Remark { get; set; }
 
         /// <summary>
         /// 采集耗时

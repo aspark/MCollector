@@ -20,8 +20,8 @@ namespace MCollector.Core
         CollectorConfig _config;
         Dictionary<string, ICollector> _collectors = new Dictionary<string, ICollector>(StringComparer.InvariantCultureIgnoreCase);
         Dictionary<string, IPreparer> _preparers = new Dictionary<string, IPreparer>(StringComparer.InvariantCultureIgnoreCase);
-        Dictionary<string, ITransformer> _transforms = new Dictionary<string, ITransformer>(StringComparer.InvariantCultureIgnoreCase);
         Dictionary<string, IExporter> _exporters = new Dictionary<string, IExporter>();
+        ITransformerRunner _transformerRunner;
 
         ICollectTargetManager _targetManager;
         DefaultCollectedDataPool _dataPool;
@@ -30,7 +30,7 @@ namespace MCollector.Core
         CancellationTokenSource _tokenSource;
 
         public CollectorStarter(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, 
-            IOptions<CollectorConfig> config, ICollectTargetManager targetManager,  IList<ICollector> collectors, IList<ITransformer> transformers, IList<IPreparer> preparers, IList<IExporter> exporters)//DefaultCollectedDataAccessor dataAccessor, CollectorSignal collectorSignal
+            IOptions<CollectorConfig> config, ICollectTargetManager targetManager,  IList<ICollector> collectors, ITransformerRunner transformerRunner, IList<IPreparer> preparers, IList<IExporter> exporters)//DefaultCollectedDataAccessor dataAccessor, CollectorSignal collectorSignal
         {
             _logger = loggerFactory.CreateLogger<CollectorStarter>();
 
@@ -47,11 +47,6 @@ namespace MCollector.Core
                 _collectors[collector.Type] = collector;
             }
 
-            foreach (var tranformer in transformers)
-            {
-                _transforms[tranformer.Name] = tranformer;
-            }
-
             foreach (var preparer in preparers)
             {
                 _preparers[preparer.Name] = preparer;
@@ -61,6 +56,8 @@ namespace MCollector.Core
             {
                 _exporters[exporter.Name] = exporter;
             }
+
+            _transformerRunner = transformerRunner;
 
             _dataPool = serviceProvider.GetRequiredService<DefaultCollectedDataPool>();
             _collectorSignal = serviceProvider.GetRequiredService<CollectorSignal>();
@@ -104,20 +101,20 @@ namespace MCollector.Core
             
             foreach (var target in _targetManager.GetAll())
             {
-                StartImpl(target, CollectTargetChangedType.Add);
+                StartCollect(target, CollectTargetChangedType.Add);
             }
 
-            _targetManager.AddChangedCallback(StartImpl);
+            _targetManager.AddChangedCallback(StartCollect);
         }
 
         bool _isRunning = false;
 
-        private class TargetRunnerInfo : IDisposable
+        private class TargetCollectInfo : IDisposable
         {
             CancellationTokenSource _cts;
             CollectorStarter _starter;
             DefaultCollectedDataPool _dataPool;
-            public TargetRunnerInfo(CollectorStarter starter, DefaultCollectedDataPool dataPool, CollectTarget target)
+            public TargetCollectInfo(CollectorStarter starter, DefaultCollectedDataPool dataPool, CollectTarget target)
             {
                 _cts = new CancellationTokenSource();
                 Target = target;//todo 复制一个target，因为prepare可能会修改，但也要考虑是否有引用比较
@@ -150,32 +147,32 @@ namespace MCollector.Core
             }
         }
 
-        private ConcurrentDictionary<string, TargetRunnerInfo> _tasks = new ConcurrentDictionary<string, TargetRunnerInfo>();
-        private void StartImpl(CollectTarget target, CollectTargetChangedType type)
+        private ConcurrentDictionary<string, TargetCollectInfo> _tasks = new ConcurrentDictionary<string, TargetCollectInfo>();
+        private void StartCollect(CollectTarget target, CollectTargetChangedType type)
         {
             if (_isRunning)
             {
                 if(type == CollectTargetChangedType.Delete)
                 {
-                    if (_tasks.TryRemove(target.Name, out TargetRunnerInfo old))
+                    if (_tasks.TryRemove(target.Name, out TargetCollectInfo old))
                     {
                         old.Dispose();
                     }
                 }
                 else
                 {
-                    var runnerInfo = new TargetRunnerInfo(this, _dataPool, target);
+                    var runnerInfo = new TargetCollectInfo(this, _dataPool, target);
 
-                    _tasks.AddOrUpdate(target.Name, k => StartImpl(runnerInfo), (k, o) => {
+                    _tasks.AddOrUpdate(target.Name, k => StartCollect(runnerInfo), (k, o) => {
                         o.Dispose();
 
-                        return StartImpl(runnerInfo);
+                        return StartCollect(runnerInfo);
                     });
                 }
             }
         }
 
-        private TargetRunnerInfo StartImpl(TargetRunnerInfo info)
+        private TargetCollectInfo StartCollect(TargetCollectInfo info)
         {
             var task = Task.Run(() => StartAsync(info), info.CancellationToken);
             info.Task = task;
@@ -183,7 +180,7 @@ namespace MCollector.Core
             return info;
         }
 
-        private async Task StartAsync(TargetRunnerInfo info)
+        private async Task StartAsync(TargetCollectInfo info)
         {
             if (_collectors.ContainsKey(info.Target.Type))
             {
@@ -206,7 +203,7 @@ namespace MCollector.Core
                         items = new [] { data };
 
                         //transform
-                        items = await Transform(info.Target, items, info.Target.Transform);
+                        items = await _transformerRunner.Transform(info.Target, items, info.Target.Transform);
                     }
                     catch(Exception ex) 
                     {
@@ -254,35 +251,6 @@ namespace MCollector.Core
             }
 
             //if()
-        }
-
-        private async Task<IEnumerable<CollectedData>> Transform(CollectTarget target, IEnumerable<CollectedData> items, Dictionary<string, Dictionary<string, object>> transformers)
-        {
-            if (transformers?.Any() == true)
-            {
-                var changedItems = new List<CollectedData>();
-                foreach(var item in items)
-                {
-                    foreach (var trans in transformers)
-                    {
-                        if (item is FinalCollectedData || !item.IsSuccess)
-                        {
-                            changedItems.Add(item);
-
-                            break;
-                        }
-
-                        if (_transforms.ContainsKey(trans.Key))
-                        {
-                            changedItems.AddRange( await _transforms[trans.Key].Run(target, new[] { item } , trans.Value));
-                        }
-                    }
-                }
-
-                return changedItems;
-            }
-
-            return items;
         }
     }
 }

@@ -81,7 +81,7 @@ namespace MCollector.Core.Transformers
                     if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array)
                     {
                         data.Content = MapElementValue(prop.Value, args.ExtractContentFrom, args.ContentMapper);
-                        data.Remark = MapElementValue(prop.Value, args.ExtractRemarkFrom, allowMiss: true);
+                        //data.Remark = MapElementValue(prop.Value, args.ExtractRemarkFrom, allowMiss: true);
                     }
                     else
                     {
@@ -112,11 +112,11 @@ namespace MCollector.Core.Transformers
                         //content
                         data.Content = MapElementValue(elContent, args.ContentMapper);
 
-                        //remark 可选
-                        if (element.TryGetProperty(args.ExtractRemarkFrom, out JsonElement elRemark))
-                        {
-                            data.Remark = MapElementValue(elRemark);
-                        }
+                        ////remark 可选
+                        //if (element.TryGetProperty(args.ExtractRemarkFrom, out JsonElement elRemark))
+                        //{
+                        //    data.Remark = MapElementValue(elRemark);
+                        //}
 
                         items.Add(data);
 

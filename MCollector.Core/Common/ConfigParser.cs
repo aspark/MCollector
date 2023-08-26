@@ -42,15 +42,15 @@ namespace MCollector.Core
                         }
                     }
 
-                    //merge Refs
-                    if (subConfig.Refs?.Any() == true)
-                    {
-                        config.Refs ??= new CollectorRefConfig();
-                        foreach (var reff in subConfig.Refs)
-                        {
-                            config.Exporter[reff.Key] = reff.Value;
-                        }
-                    }
+                    ////merge Refs
+                    //if (subConfig.Refs?.Any() == true)
+                    //{
+                    //    config.Refs ??= new CollectorRefConfig();
+                    //    foreach (var reff in subConfig.Refs)
+                    //    {
+                    //        config.Exporter[reff.Key] = reff.Value;
+                    //    }
+                    //}
                 }
             }
 

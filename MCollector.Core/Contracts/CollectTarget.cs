@@ -1,6 +1,7 @@
 ﻿using MCollector.Core.Common;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -33,6 +34,9 @@ namespace MCollector.Core.Contracts
         /// </summary>
         public string Type { get; set; }
 
+        /// <summary>
+        /// 采集器的配置
+        /// </summary>
         public Dictionary<string, object> Args { get; set; }
 
         /// <summary>
@@ -144,11 +148,40 @@ namespace MCollector.Core.Contracts
         /// <summary>
         /// 对返回内容的转换器
         /// </summary>
-        public Dictionary<string, Dictionary<string, object>> Transform { get; set; } = new Dictionary<string, Dictionary<string, object>>();
+        public TransferConfig Transform { get; set; } = new TransferConfig();
+
+        /// <summary>
+        /// 自定义配置，可用于扩展的实现中，如：Export
+        /// </summary>
+        public ExtrasConfig Extras { get; set; } = new ExtrasConfig();
 
         public string GetVersion()
         {
             return HashHelper.SHA1(SerializerHelper.ToPlainString(this));
+        }
+    }
+
+    public class TransferConfig: Dictionary<string, Dictionary<string, object>>
+    {
+
+    }
+
+    public class ExtrasConfig: Dictionary<string, dynamic>
+    {
+        /// <summary>
+        /// 通过path获取对象
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public bool TryGetCustomConfig<T>(string path, out T? config) where T: class, new()
+        {
+            config = null;
+
+            if(this.Count == 0)
+                return false;
+
+            return SerializerHelper.TryCreateFrom(this, path, out config);
         }
     }
 }
