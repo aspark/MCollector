@@ -70,7 +70,7 @@ MCollector采集过程由四个阶段组成：
 
 串联关系如下：
 
-**Prepare**(可多个串联)-->**Collect**(Target)-->**Transfrom**(可多个串联)-->**Export**(多个并行)
+**Prepare**(可多个串联)-->**Collect**(Target)-->**Transform**(可多个串联)-->**Export**(多个并行)
 
 
 ## 编译
@@ -394,7 +394,7 @@ todo
 
 
 ### 自定义预处理
-实现接口`IPreparer`或继承`PreparerBase<OAuthPreparerArgs>`，后续提供了强类型的参数，如：
+实现接口`IPreparer`或继承`PreparerBase<T>`，后者提供了强类型的参数，如：
 ``` csharp
 internal class CustomPreparer : PreparerBase<CustomArgs>
     {
