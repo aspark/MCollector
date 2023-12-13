@@ -26,12 +26,6 @@ namespace MCollector.Plugins.Prometheus
             _transformerRunner = transformerRunner;
         }
 
-        public void Dispose()
-        {
-            _observer?.Dispose();
-            _server?.Dispose();
-        }
-
         public string Name => "prometheus";
 
         MetricServer _server;
@@ -154,19 +148,29 @@ namespace MCollector.Plugins.Prometheus
         private Task _removeKeysTask = Task.CompletedTask;
         private void RemoveExpiredKeysAsync()
         {
-            Interlocked.CompareExchange(ref _removeKeysTask, Task.Run(() =>
+            if(Interlocked.CompareExchange(ref _removeKeysTask, Task.FromResult(true), Task.CompletedTask) == Task.CompletedTask)
             {
-                var exists = new HashSet<string>(_dataPool.GetData().Select(d => d.Name));
-                foreach (var key in _dicMetrixs.Keys)
+                Task.Run(() =>
                 {
-                    if (exists.Contains(key) == false)
-                    {
-                        _dicMetrixs.TryRemove(key, out _);
-                    }
-                }
+                    //if(_removeKeysTask.IsCompleted)
 
-                Interlocked.Exchange(ref _removeKeysTask, Task.CompletedTask);
-            }), Task.CompletedTask);
+                    try
+                    {
+                        var exists = new HashSet<string>(_dataPool.GetData().Select(d => d.Name));
+                        foreach (var key in _dicMetrixs.Keys)
+                        {
+                            if (exists.Contains(key) == false)
+                            {
+                                _dicMetrixs.TryRemove(key, out _);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _removeKeysTask, Task.CompletedTask);
+                    }
+                });
+            }
         }
 
         public Task Stop()
@@ -175,6 +179,13 @@ namespace MCollector.Plugins.Prometheus
 
             return Task.CompletedTask;
         }
+
+        public void Dispose()
+        {
+            _observer?.Dispose();
+            _server?.Dispose();
+        }
+
 
         public void OnCompleted()
         {
