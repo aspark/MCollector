@@ -33,7 +33,15 @@ namespace MCollector.Core.Contracts
         /// </summary>
         public CollectTarget Target { get; private set; }
 
+        /// <summary>
+        /// 是否正常收集
+        /// </summary>
         public bool IsSuccess { get; set; } = true;
+
+        /// <summary>
+        /// 当失败时，是否停止后续步骤，默认true
+        /// </summary>
+        public bool StopWhenFailed { get; set; } = true;
 
         /// <summary>
         /// 上下文

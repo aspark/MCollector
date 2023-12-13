@@ -42,7 +42,7 @@ namespace MCollector.Core.Contracts
                 {
                     foreach (var trans in transformers)
                     {
-                        if (item is FinalCollectedData || !item.IsSuccess)
+                        if (item is FinalCollectedData || (!item.IsSuccess && item.StopWhenFailed)) //不成功的继续transform，url可能部分失败
                         {
                             changedItems.Add(item);
 

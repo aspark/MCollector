@@ -81,6 +81,7 @@ namespace MCollector.Core.Collectors
                 data.Headers = res.Headers.ToDictionary(h => h.Key, h => (object)string.Join(",", h.Value));
                 //data.Code = (int)res.StatusCode;
                 data.Content = await res.Content.ReadAsStringAsync();
+                data.StopWhenFailed = string.IsNullOrWhiteSpace(data.Content) ? true : false;
                 if (!data.IsSuccess && string.IsNullOrWhiteSpace(data.Content))
                 {
                     data.Content = ((int)res.StatusCode).ToString();
