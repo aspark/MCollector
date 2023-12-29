@@ -42,6 +42,7 @@ targets:
     target: "http://localhost:44359/healthz"
     type: url
     interval: rand(30s)
+    retryInterval: 5s
     transform:
       json: 
         rootPath: results

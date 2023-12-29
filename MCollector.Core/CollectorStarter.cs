@@ -227,7 +227,11 @@ namespace MCollector.Core
                         }
 
                         //await Task.Delay(target.Interval);
-                        _collectorSignal.Wait(info.Target.GetInterval());
+
+                        //有失败时，缩小间隔时间
+                        int interval = info.Target.GetInterval(items?.Any(i => i.IsSuccess == false) == true);
+
+                        _collectorSignal.Wait(interval);
                     }
                 }
             }

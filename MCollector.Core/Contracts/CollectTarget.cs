@@ -12,7 +12,16 @@ namespace MCollector.Core.Contracts
 {
     public class CollectTarget
     {
-        private string _name;
+        private Lazy<Func<int>> _fnInterval;
+        private Lazy<Func<int>> _fnRetryInterval;
+
+        public CollectTarget()
+        {
+            _fnInterval = new Lazy<Func<int>>(() => ParseInterval(Interval), false);
+            _fnRetryInterval = new Lazy<Func<int>>(() => ParseInterval(RetryInterval), false);
+        }
+
+        private string _name = string.Empty;
 
         /// <summary>
         /// 名称，唯一标识
@@ -32,12 +41,12 @@ namespace MCollector.Core.Contracts
         /// <summary>
         /// 检测方式
         /// </summary>
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
 
         /// <summary>
         /// 采集器的配置
         /// </summary>
-        public Dictionary<string, object> Args { get; set; }
+        public Dictionary<string, object> Args { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// 目标
@@ -49,52 +58,64 @@ namespace MCollector.Core.Contracts
         /// </summary>
         public string Interval { get; set; } = "3s";
 
+        /// <summary>
+        /// 出错重试的，时间间隔
+        /// </summary>
+        public string RetryInterval { get; set; } = "5m";
+
         private Random _rand = new Random(DateTime.Now.Millisecond);
-        private Func<int>? _fnInterval = null;
-        //private int? _interval;
-        public int GetInterval()
+        public int GetInterval(bool isRetry = false)
         {
-            if (_fnInterval == null)
+            return (isRetry ? _fnRetryInterval.Value : _fnInterval.Value)();
+        }
+
+        public Func<int> ParseInterval(string internval)
+        {
+            Func<int> fn = null;
+
+            if (internval.StartsWith("rand", StringComparison.InvariantCultureIgnoreCase))
             {
-                lock (this)
+                Regex ex = new Regex(@"\((?<s>[^,]+),?\s*(?<e>[^\s]+)?\)");
+                var m = ex.Match(internval);
+                if (m.Success)
                 {
-                    if (_fnInterval == null)
+                    var start = ParseTime(m.Groups["s"].Value);
+                    var end = 0;
+                    if (m.Groups.ContainsKey("e") && !string.IsNullOrWhiteSpace(m.Groups["e"].Value))
                     {
-                        if (Interval.StartsWith("rand", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            Regex ex = new Regex(@"\((?<s>[^,]+),?\s*(?<e>[^\s]+)?\)");
-                            var m = ex.Match(Interval);
-                            if (m.Success)
-                            {
-                                var start = ParseTime(m.Groups["s"].Value);
-                                var end = 0;
-                                if (m.Groups.ContainsKey("e") && !string.IsNullOrWhiteSpace(m.Groups["e"].Value))
-                                {
-                                    end = ParseTime(m.Groups["e"].Value);
-                                }
-                                else
-                                {
-                                    end = (int)(start * 1.1);
-                                    start = (int)(start * 0.9);
-                                }
-
-                                _fnInterval = new Func<int>(() => _rand.Next(start, end));
-                            }
-                        }
-                        else
-                        {
-                            var interval = ParseTime(Interval);
-
-                            _fnInterval = new Func<int>(() => interval);
-                        }
-
-                        if (_fnInterval == null)
-                            _fnInterval = new Func<int>(() => 3000);
+                        end = ParseTime(m.Groups["e"].Value);
                     }
+                    else
+                    {
+                        end = (int)(start * 1.1);
+                        start = (int)(start * 0.9);
+                    }
+
+                    fn = new Func<int>(() => _rand.Next(start, end));
                 }
             }
+            else if (internval.StartsWith('['))
+            {
+                var arr = internval.Trim('[', ']').Split(',').Select(i => ParseTime(i.Trim())).ToArray();
+                var i = 0;
 
-            return _fnInterval();
+                fn = new Func<int>(() => {
+                    if (i >= arr.Length) i = 0;
+
+                    return arr[i++ % arr.Length];
+                });
+            }
+            else
+            {
+                var interval = ParseTime(internval);
+
+                fn = new Func<int>(() => interval);
+            }
+
+            if (fn == null)
+                fn = new Func<int>(() => 3000);
+
+            return fn;
         }
 
         private int ParseTime(string time, int defaultTime = 3000)

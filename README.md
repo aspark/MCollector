@@ -133,7 +133,8 @@ targets: # 检测目标集合（target）
     args: # 可选】传入type对应collector的参数，按需传入多个
       a1: 1
       a2: 2
-    interval: 3 # 可选】检测间隔时间，也可使用ms,m,h,rand(10s,20s),rand(10s)等单位，默认单位：s，默认3s
+    interval: 3 # 【可选】检测间隔时间，也可使用ms,m,h,rand(10s,20s),rand(10s),[1s,2s,3m]等单位，默认单位：s，默认3s
+    retryInterval: 10m # 【可选】失败时重试时间间隔，格式同上，默认5m
     headers: # 【可选】头信息，键值对
       Host: xxx.com
       Content-Type: application/json
@@ -161,7 +162,8 @@ targets: # 检测目标集合（target）
 | target | string | 目标地址 |
 | type | string | 使用的Collector名称 |
 | args | dictionary | Collector执行时的参数 |
-| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟)、h(小时) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内随机 |
+| internval | string | 间隔时间，默认秒，可使用字母单位，如：ms(毫秒)、s(秒)、m(分钟)、h(小时) 、rand（随机数），如：rand(10s，20s)表示大于等于10秒小于20s的间隔时间、rand(20s)表示在20s上下10%内随机、[1s,2s,3m]表示从数组中循环取值 |
+| retryInterval | string | 失败时重试的时间间隔，格式同internval，默认：5m
 | headers | dictionary | 请求头，可使用prepare修改target的内容，如：oauth21 |
 | contents | string[] | 请求消息体 |
 | transform | dictionary | 统一结果转换 |
