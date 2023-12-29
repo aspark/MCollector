@@ -120,6 +120,8 @@ namespace MCollector.Plugins.Prometheus
 
                         gauge.WithLabels(labelValues);
                     }
+
+                    gauge.Publish();
                 }
 
             }
@@ -161,7 +163,8 @@ namespace MCollector.Plugins.Prometheus
                         {
                             if (exists.Contains(key) == false)
                             {
-                                _dicMetrixs.TryRemove(key, out _);
+                                if(_dicMetrixs.TryGetValue(key , out var g)) g.Unpublish();
+                                //_dicMetrixs.TryRemove(key, out _);
                             }
                         }
                     }
