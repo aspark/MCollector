@@ -12,8 +12,13 @@ namespace MCollector.Test
         [Fact]
         public void Interval()
         {
-            var target = new CollectTarget() { Interval = "3",  RetryInterval = "[1m,3m,5m,7m,9m]" };
+            var target = new CollectTarget() { Interval = "3" };
 
+            target.GetInterval().ShouldBe(3 * 1000);//3s
+            target.GetInterval(true).ShouldBe(3 * 1000);//3s
+
+
+            target = new CollectTarget() { Interval = "3",  RetryInterval = "[1m,3m,5m,7m,9m]" };
             target.GetInterval().ShouldBe(3 * 1000);//3s
             target.GetInterval(true).ShouldBe(1 * 60 * 1000);//[1m,3m,5m,7m,9m]
             target.GetInterval(true).ShouldBe(3 * 60 * 1000);

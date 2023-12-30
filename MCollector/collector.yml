@@ -53,6 +53,14 @@ targets:
           Healthy: 1
           Unhealthy: 0
           Degraded: 0
+  - name: metricx
+    target: http://localhost:44359/metrics?withBg=true
+    type: url
+    interval: 30s
+    transform:
+      json:
+        extractContentFrom: Value
+        extractNameFrom: Name
   - name: curl local with header
     target: "http://127.0.0.1"
     type: url

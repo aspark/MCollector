@@ -57,8 +57,8 @@ namespace MCollector.Core.Collectors
                 }
             }
 
-            var sw = new Stopwatch();
-            sw.Start();
+            //var sw = new Stopwatch();
+            //sw.Start();
 
             var data = new CollectedData(target.Name, target);
 
@@ -97,6 +97,8 @@ namespace MCollector.Core.Collectors
                 {
                     data.Content = ex.GetBaseException()?.Message;
                 }
+
+                Console.WriteLine("请求失败：" + target.Target + " " + data.Content);
 
                 data.IsSuccess = false;
             }

@@ -18,7 +18,7 @@ namespace MCollector.Core.Contracts
         public CollectTarget()
         {
             _fnInterval = new Lazy<Func<int>>(() => ParseInterval(Interval), false);
-            _fnRetryInterval = new Lazy<Func<int>>(() => ParseInterval(RetryInterval), false);
+            _fnRetryInterval = new Lazy<Func<int>>(() => ParseInterval(!string.IsNullOrWhiteSpace(RetryInterval)? RetryInterval: Interval), false);
         }
 
         private string _name = string.Empty;
@@ -61,7 +61,7 @@ namespace MCollector.Core.Contracts
         /// <summary>
         /// 出错重试的，时间间隔
         /// </summary>
-        public string RetryInterval { get; set; } = "5m";
+        public string RetryInterval { get; set; } = string.Empty;
 
         private Random _rand = new Random(DateTime.Now.Millisecond);
         public int GetInterval(bool isRetry = false)
